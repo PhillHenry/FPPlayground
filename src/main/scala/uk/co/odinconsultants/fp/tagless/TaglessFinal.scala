@@ -56,8 +56,25 @@ object TaglessFinal {
     override def toString(v: NoWrap[Int]): NoWrap[String] = v.toString
   }
 
+  type PrettyPrint[ScalaValue] = String
+
+  val interpretAsPrettyPrint = new Language[PrettyPrint] {
+    override def number(v: Int): PrettyPrint[Int] = s"($v)"
+    override def increment(a: PrettyPrint[Int]): PrettyPrint[Int] = s"(inc $a)"
+    override def add(a: PrettyPrint[Int], b: PrettyPrint[Int]): PrettyPrint[Int] = s"(+ $a $b)"
+
+    override def text(v: String): PrettyPrint[String] = s"[$v]"
+    override def toUpper(a: PrettyPrint[String]): PrettyPrint[String] = s"(toUpper $a)"
+    override def concat(a: PrettyPrint[String], b: PrettyPrint[String]): PrettyPrint[String] = s"(concat $a $b)"
+
+    override def toString(v: PrettyPrint[Int]): PrettyPrint[String] = s"(toString $v)"
+  }
+
   def main(args: Array[String]): Unit = {
     println(fullExpression(interpret))
+
+    println(s"interpreted full (as pretty print): ${fullExpression(interpretAsPrettyPrint)}")
+
   }
 
 }

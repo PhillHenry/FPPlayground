@@ -2,9 +2,11 @@ package uk.co.odinconsultants.fp.tagless
 
 
 /**
+  * "usually OOP makes it hard add interface methods but easy to add implementations. In FP, on the other hand, it’s easy to add new methods, but harder to add implementations."
+  * "Tagless final approach brings us 3 “moving parts”: Language, Bridge, Interpreter"
   * see https://blog.scalac.io/exploring-tagless-final.html
   */
-object TaglessFinal {
+object TaglessFinal extends App {
 
   trait Language[Wrapper[_]] {
     def number(v: Int): Wrapper[Int]
@@ -70,11 +72,51 @@ object TaglessFinal {
     override def toString(v: PrettyPrint[Int]): PrettyPrint[String] = s"(toString $v)"
   }
 
-  def main(args: Array[String]): Unit = {
-    println(fullExpression(interpret))
+  println(fullExpression(interpret))
 
-    println(s"interpreted full (as pretty print): ${fullExpression(interpretAsPrettyPrint)}")
+  println(s"interpreted full (as pretty print): ${fullExpression(interpretAsPrettyPrint)}")
 
+  trait LanguageWithMul[Wrapper[_]] extends Language[Wrapper] {
+    def multiply(a: Wrapper[Int], b: Wrapper[Int]): Wrapper[Int]
+  }
+  trait ScalaToLanguageWithMulBridge[ScalaValue] {
+    def apply[Wrapper[_]](implicit L: LanguageWithMul[Wrapper]): Wrapper[ScalaValue]
+  }
+  def multiply(a: Int, b: Int) = new ScalaToLanguageWithMulBridge[Int] {
+    override def apply[Wrapper[_]](implicit L: LanguageWithMul[Wrapper]): Wrapper[Int] = {
+      L.multiply(L.number(a), L.number(b))
+    }
+  }
+
+  val interpretWithMul = new LanguageWithMul[NoWrap] {
+    override def multiply(a: NoWrap[Int], b: NoWrap[Int]): NoWrap[Int] = a * b
+
+    override def number(v: Int): NoWrap[Int] = v
+    override def increment(a: NoWrap[Int]): NoWrap[Int] = a + 1
+    override def add(a: NoWrap[Int], b: NoWrap[Int]): NoWrap[Int] = a + b
+
+    override def text(v: String): NoWrap[String] = v
+    override def toUpper(a: NoWrap[String]): NoWrap[String] = a.toUpperCase
+    override def concat(a: NoWrap[String], b: NoWrap[String]): NoWrap[String] = a + " " + b
+
+    override def toString(v: NoWrap[Int]): NoWrap[String] = v.toString
+  }
+
+  // PH
+  trait SemiImplemented extends Language[NoWrap] {
+    // copied from interpretAsPrettyPrint above
+    override def number(v: Int): NoWrap[Int] = v
+    override def increment(a: NoWrap[Int]): NoWrap[Int] = a + 1
+    override def add(a: NoWrap[Int], b: NoWrap[Int]): NoWrap[Int] = a + b
+
+    override def text(v: String): NoWrap[String] = v
+    override def toUpper(a: NoWrap[String]): NoWrap[String] = a.toUpperCase
+    override def concat(a: NoWrap[String], b: NoWrap[String]): NoWrap[String] = a + " " + b
+
+    override def toString(v: NoWrap[Int]): NoWrap[String] = v.toString
+  }
+  val interpretWithMulPH = new SemiImplemented with LanguageWithMul[NoWrap] {
+    override def multiply(a: NoWrap[Int], b: NoWrap[Int]): NoWrap[Int] = a * b
   }
 
 }

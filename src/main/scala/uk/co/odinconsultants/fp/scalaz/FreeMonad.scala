@@ -9,10 +9,17 @@ object FreeMonad extends App {
 
   type ID[T] = T
 
-  val scalazEitherRight:  List[String] \/ Int     = 1.right[List[String]]
-  val scalazEitherLeft:   Int \/ Free[List, Int]  = 1.left[Free[List, Int]]
+  type MyType = List[Free[List, Int]]
+
+  val scalazEitherRight:    MyType \/ Int = 1.right[MyType]
+  val scalazEitherLeft:     Int \/ MyType = 1.left[MyType]
+
   println(scalazEitherLeft)
 
-//  val freeLeaf = Free(scalazEitherLeft)
-//  val freeList = Free[List, Int](List(freeLeaf))
+  val freeLeaf = Free(scalazEitherLeft)
+
+  val scalazEitherRightInt: Int \/ MyType = List(freeLeaf).right[Int]
+  val freeBranch = Free(scalazEitherRightInt)
+
+  println(freeBranch)
 }

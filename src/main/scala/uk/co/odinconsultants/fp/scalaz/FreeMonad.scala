@@ -7,7 +7,9 @@ object FreeMonad extends App {
 
   case class Free[F[_], A](resume: A \/ F[Free[F, A]])
 
-  type MyType                       = List[Free[List, Int]]
+  type ID[T]                        = T
+
+  type MyType                       = ID[Free[ID, Int]]
 
   val disjointRight:  MyType \/ Int = 1.right[MyType]
   val disjointLeft:   Int \/ MyType = 1.left[MyType]
@@ -16,7 +18,7 @@ object FreeMonad extends App {
 
   val freeLeaf                      = Free(disjointLeft)
 
-  val disjointLeaves: Int \/ MyType = List(freeLeaf).right[Int]
+  val disjointLeaves: Int \/ MyType = freeLeaf.right[Int]
   val freeBranch                    = Free(disjointLeaves)
 
   println(freeBranch)

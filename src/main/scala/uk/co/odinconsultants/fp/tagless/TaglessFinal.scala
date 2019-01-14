@@ -3,6 +3,9 @@ package uk.co.odinconsultants.fp.tagless
 
 /**
   * "usually OOP makes it hard add interface methods but easy to add implementations. In FP, on the other hand, it’s easy to add new methods, but harder to add implementations."
+  * https://blog.scalac.io/exploring-tagless-final.html
+  * See https://underscore.io/blog/posts/2017/06/02/uniting-church-and-state.html why this is true
+  *
   * "Tagless final approach brings us 3 “moving parts”: Language, Bridge, Interpreter"
   * see https://blog.scalac.io/exploring-tagless-final.html
   */

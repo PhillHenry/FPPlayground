@@ -26,10 +26,10 @@ object MonadsDoNotCompose extends App {
 //    X[({type λ[α]=M[N[α]]})#λ]
 
   def FunctorCompose[M[_], N[_]](implicit mx: Functor[M], nx: Functor[N]): Functor[({type λ[α]=M[N[α]]})#λ] =
-  new Functor[({type λ[α]=M[N[α]]})#λ] {
+    new Functor[({type λ[α]=M[N[α]]})#λ] {
     def fmap[A, B](f: A => B, a: M[N[A]]) =
       mx.fmap((na: N[A]) => nx.fmap(f, na), a)
-  }
+    }
 
   def ApplicativeCompose[M[_], N[_]]
   (implicit ma: Applicative[M], na: Applicative[N]):
@@ -43,5 +43,10 @@ object MonadsDoNotCompose extends App {
       def point[A](a: A) =
         ma point (na point a)
     }
+
+  trait JustForCompilation {
+    def MonadCompose[M[_], N[_]](implicit ma: Monad[M], na: Monad[N]):
+    Monad[({type λ[α]=M[N[α]]})#λ]
+  }
 
 }

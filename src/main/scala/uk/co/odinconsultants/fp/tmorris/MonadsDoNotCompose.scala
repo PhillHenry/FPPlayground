@@ -46,7 +46,11 @@ object MonadsDoNotCompose extends App {
 
   trait JustForCompilation {
     def MonadCompose[M[_], N[_]](implicit ma: Monad[M], na: Monad[N]):
-    Monad[({type λ[α]=M[N[α]]})#λ]
+    Monad[({type λ[α]=M[N[α]]})#λ] = new Monad[({type λ[α]=M[N[α]]})#λ] {
+      override def flatMap[A, B](f: A => M[N[B]], a: M[N[A]]): M[N[B]] = ???
+
+      override def point[A](a: A): M[N[A]] = ???
+    }
   }
 
 }

@@ -10,6 +10,7 @@ object Scala {
     println(floats.reduceLeft(_ + _)) // 1.0999999
     println(floats.reduceRight(_ + _)) // 1.1
 
+    println(Seq.empty[Float].reduce(_ + _)) // Exception in thread "main" java.lang.UnsupportedOperationException: empty.reduceLeft
   }
 
 }

@@ -53,4 +53,8 @@ object MonadsDoNotCompose extends App {
     }
   }
 
+//  val listFunctor = new Functor[List[_]] {
+//    def fmap[A, B](f: A => B, a: M[N[A]]) =
+//      mx.fmap((na: N[A]) => nx.fmap(f, na), a)
+//  }
 }

@@ -11,7 +11,9 @@ sealed trait MonadX[+A] {
 
 object MonadX {
 
-  def apply[A](f: Context => A, name: String): MonadX[A] = new MonadX[A] {
+  type M[X] = MonadX[X]
+
+  def apply[A](f: Context => A, name: String): M[A] = new M[A] {
     override def run(ctx: Context): A = {
       println(s"Running $this ...")
       f(ctx)
@@ -20,15 +22,15 @@ object MonadX {
   }
 
   implicit val monad = new Monad[MonadX] {
-    override def bind[A, B](fa: MonadX[A])(f: A ⇒ MonadX[B]): MonadX[B] = {
+    override def bind[A, B](fa: M[A])(f: A ⇒ M[B]): M[B] = {
       println(s"Binding $fa ...")
       MonadX(newF(fa, f), "bound" + fa.toString)
     }
-    override def point[A](a: ⇒ A): MonadX[A] = {
+    override def point[A](a: ⇒ A): M[A] = {
       println(s"point $a [${a.getClass.getSimpleName}]")
       MonadX(_ ⇒ a, "point")
     }
-    def newF[B, A](fa: MonadX[A], f: A => MonadX[B]): Context => B = { ctx ⇒
+    def newF[B, A](fa: M[A], f: A => M[B]): Context => B = { ctx ⇒
         val faRan = fa.run(ctx)
         println(s"Running f($faRan)")
         val fd    = f(faRan)

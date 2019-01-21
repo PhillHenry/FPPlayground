@@ -27,7 +27,7 @@ object MonadX {
     }
 
     override def point[A](a: ⇒ A): MonadX[A] = {
-      println(s"point $a")
+      println(s"point $a [${a.getClass.getSimpleName}]")
       println((new Exception()).getStackTrace.drop(1).take(15).map("\t" + _).mkString("\n"))
       MonadX(_ ⇒ a, "point")
     }
@@ -55,12 +55,6 @@ object Monads {
 
     println(underline("About to run for-comprehension"))
 
-    val myYieldFunction: (String, Long) => String = new Function2[String, Long, String] {
-      override def apply(x: String, y: Long): String = x + y
-
-      override def toString(): String = "MyYieldFn"
-    }
-
     // Ultimately, we need map and flatMap defined somewhere for the Scala compiler to process this for-comprehension.
     // They come from scalaz.syntax.FunctorOps.map and scalaz.syntax.BindOps.flatMaP
     val boundhello = for {
@@ -76,11 +70,12 @@ object Monads {
     /*
 About to run boundhello
 =======================
-Running boundhello ...
-Running hello ...
-Binding hashCode ...          [VIA MAP IN FOR-COMPREHENSION]
-Running boundhashCode ...
+Running boundhello ...            [f(ctx) in run]
+Running hello ...                 [fa.run(ctx) in bind]
+Binding hashCode ...              [via map in for-comprehension - remember that map = flatMap + point]
+Running boundhashCode ...         [f(...).run(ctx) in bind]
 Running hashCode ...
+point bonjour1768203508 [String]
 Running point ...
 Yielding. x = bonjour [java.lang.String], y = 1768203508 [long]
      */

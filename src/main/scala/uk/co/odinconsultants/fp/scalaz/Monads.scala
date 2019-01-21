@@ -22,18 +22,18 @@ object MonadX {
   implicit val monad = new Monad[MonadX] {
     override def bind[A, B](fa: MonadX[A])(f: A ⇒ MonadX[B]): MonadX[B] = {
       println(s"Binding $fa ...")
-      newMonad(fa, f)
+      MonadX(newF(fa, f), "bound" + fa.toString)
     }
     override def point[A](a: ⇒ A): MonadX[A] = {
       println(s"point $a [${a.getClass.getSimpleName}]")
       MonadX(_ ⇒ a, "point")
     }
-    def newMonad[B, A](fa: MonadX[A], f: A => MonadX[B]) = MonadX({ ctx ⇒
+    def newF[B, A](fa: MonadX[A], f: A => MonadX[B]): Context => B = { ctx ⇒
         val faRan = fa.run(ctx)
         println(s"Running f($faRan)")
-        val fd = f(faRan)
+        val fd    = f(faRan)
         fd.run(ctx)
-      }, "bound" + fa.toString)
+      }
   }
 
 }

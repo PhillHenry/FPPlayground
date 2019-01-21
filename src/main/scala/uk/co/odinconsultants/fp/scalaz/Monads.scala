@@ -31,25 +31,6 @@ object MonadX {
 
 }
 
-sealed trait MonadY[+A] {
-  def run(ctx: Context): A
-}
-
-object MonadY {
-
-  def apply[A](f: Context => A): MonadY[A] = new MonadY[A] {
-    override def run(ctx: Context): A = f(ctx)
-  }
-
-  implicit val monad = new Monad[MonadY] {
-    override def bind[A, B](fa: MonadY[A])(f: A ⇒ MonadY[B]): MonadY[B] =
-      MonadY(ctx ⇒ f(fa.run(ctx)).run(ctx))
-
-    override def point[A](a: ⇒ A): MonadY[A] = MonadY(_ ⇒ a)
-  }
-
-}
-
 object Monads {
 
   import scalaz.Scalaz._
@@ -59,36 +40,36 @@ object Monads {
   def underline(x: String): String = "\n" + x + "\n" + ("=" * x.length)
 
   def main(args: Array[String]): Unit = {
-    val monadx: MonadX[String] = MonadX({ ctx: Context =>
+    val helloMonad: MonadX[String] = MonadX({ ctx: Context =>
       ctx("hello")
     }, "hello")
-    val monadx2: MonadX[Long] = MonadX ({ ctx: Context =>
+    val hashCodeMonad: MonadX[Long] = MonadX ({ ctx: Context =>
       ctx.hashCode()
     }, "hashCode")
-
-    val monady: MonadY[String] = MonadY { str =>
-      str + ", Phillip"
-    }
 
     println(underline("About to run for-comprehension"))
     // Ultimately, we need map and flatMap defined somewhere for the Scala compiler to process this for-comprehension.
     // They come from scalaz.syntax.FunctorOps.map and scalaz.syntax.BindOps.flatMa
     val helloHashMonad = for {
-        x <- monadx   // "Binding hello..."
-        y <- monadx2
-    } yield x + y
+        x <- helloMonad     // "Binding hello..."
+        y <- hashCodeMonad
+    } yield {
+      println(s"Yielding. x = $x [${x.getClass.getName}], y = $y [${y.getClass.getName}]") // Yielding. x = bonjour [java.lang.String], y = 1768203508 [long]
+      x + y
+    }
 
     val map = Map("hello" -> "bonjour", "goodbye" -> "au revoir")
-    println(underline("About to run"))
+    println(underline(s"About to run $helloHashMonad"))
     /*
-About to run
-============
+About to run boundhello
+=======================
 Running boundhello ...
 Running hello ...
 Binding hashCode ...
 Running boundhashCode ...
 Running hashCode ...
 Running point ...
+Yielding. x = bonjour [java.lang.String], y = 1768203508 [long]
      */
     val helloHash: String = helloHashMonad.run(map)
     println()

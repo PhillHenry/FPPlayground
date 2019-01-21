@@ -26,7 +26,11 @@ object MonadX {
       MonadX(ctx ⇒ f(fa.run(ctx)).run(ctx), "bound" + fa.toString)
     }
 
-    override def point[A](a: ⇒ A): MonadX[A] = MonadX(_ ⇒ a, "point")
+    override def point[A](a: ⇒ A): MonadX[A] = {
+      println(s"point $a")
+      println((new Exception()).getStackTrace.drop(1).take(15).map("\t" + _).mkString("\n"))
+      MonadX(_ ⇒ a, "point")
+    }
   }
 
 }
@@ -40,38 +44,47 @@ object Monads {
   def underline(x: String): String = "\n" + x + "\n" + ("=" * x.length)
 
   def main(args: Array[String]): Unit = {
-    val helloMonad: MonadX[String] = MonadX({ ctx: Context =>
+    val hello: MonadX[String] = MonadX({ ctx: Context =>
+      println("=>\tctx(hello)")
       ctx("hello")
     }, "hello")
-    val hashCodeMonad: MonadX[Long] = MonadX ({ ctx: Context =>
+    val hashcode: MonadX[Long] = MonadX ({ ctx: Context =>
+      println("=>\thashCode")
       ctx.hashCode()
     }, "hashCode")
 
     println(underline("About to run for-comprehension"))
+
+    val myYieldFunction: (String, Long) => String = new Function2[String, Long, String] {
+      override def apply(x: String, y: Long): String = x + y
+
+      override def toString(): String = "MyYieldFn"
+    }
+
     // Ultimately, we need map and flatMap defined somewhere for the Scala compiler to process this for-comprehension.
-    // They come from scalaz.syntax.FunctorOps.map and scalaz.syntax.BindOps.flatMa
-    val helloHashMonad = for {
-        x <- helloMonad     // "Binding hello..."
-        y <- hashCodeMonad
+    // They come from scalaz.syntax.FunctorOps.map and scalaz.syntax.BindOps.flatMaP
+    val boundhello = for {
+        x <- hello     // "Binding hello..."
+        y <- hashcode
     } yield {
       println(s"Yielding. x = $x [${x.getClass.getName}], y = $y [${y.getClass.getName}]") // Yielding. x = bonjour [java.lang.String], y = 1768203508 [long]
       x + y
     }
 
     val map = Map("hello" -> "bonjour", "goodbye" -> "au revoir")
-    println(underline(s"About to run $helloHashMonad"))
+    println(underline(s"About to run $boundhello"))
     /*
 About to run boundhello
 =======================
 Running boundhello ...
 Running hello ...
-Binding hashCode ...
+Binding hashCode ...          [VIA MAP IN FOR-COMPREHENSION]
 Running boundhashCode ...
 Running hashCode ...
 Running point ...
 Yielding. x = bonjour [java.lang.String], y = 1768203508 [long]
      */
-    val helloHash: String = helloHashMonad.run(map)
+    val helloHash: String = boundhello.run(map)
     println()
 
     println(helloHash) // "bonjour1768203508"

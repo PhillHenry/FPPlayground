@@ -51,13 +51,13 @@ Binding hello ...
 About to run boundhello
 =======================
 Running boundhello ...            [f(ctx) in MonadX.run]
-Running hello ...                 [fa.run(ctx) in newMonad]
-Running f(bonjour)                *appears* to 'pull' in the second line of the for comprehension
+Running hello ...                 [fa.run(ctx) in newF = 'bonjour']
+Running f(bonjour)                f *appears* to 'pull' in the second line of the for comprehension
 Binding hashCode ...              [via map in for-comprehension - remember that map = flatMap + point *]
-Running boundhashCode ...         [fd.run(ctx) in bind]
-Running hashCode ...              [fa.run(ctx) but this time in the boundhashCode]
-Running f(1768203508)             [fd = f(faRan)]
-point bonjour1768203508 [String]  [the point in the map = flatMap + point equation *]
+Running boundhashCode ...         [fd.run(ctx) in newF of boundhello]
+Running hashCode ...              [f(ctx) in MonadX.run but this time from in boundhashCode.newF's fa.run(ctx)]
+Running f(1768203508)             [simply from hashcode.run]
+point 18 [Integer]                f *appears* to pull in the point in the map = flatMap + point equation *
 Running point ...                 [fd.run(ctx)]
 Yielding. x = bonjour [java.lang.String], y = 1768203508 [long]
 
@@ -71,15 +71,15 @@ Yielding. x = bonjour [java.lang.String], y = 1768203508 [long]
       y <- hashcode
     } yield {
       println(s"Yielding. x = $x [${x.getClass.getName}], y = $y [${y.getClass.getName}]") // Yielding. x = bonjour [java.lang.String], y = 1768203508 [long]
-      x + y
+      (x + y).length
     }
 
-    val map = Map("hello" -> "bonjour", "goodbye" -> "au revoir")
+    val map = Map("hello" -> "bonjour")
     println(underline(s"About to run $boundhello"))
-    val helloHash: String = boundhello.run(map)
+    val helloHash = boundhello.run(map)
     println()
 
-    println(helloHash) // "bonjour1768203508"
+    println(helloHash) // "18"
   }
 
   type Context = Map[String, String]

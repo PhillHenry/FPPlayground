@@ -23,12 +23,17 @@ object Composition extends App {
 
 
   def applicative = {
-    import cats._
-    import cats.data._
+//    import cats._
+    import cats.data.Nested
     import cats.implicits._
-    val fa = Nested[Future, Option, Int](Future(Some(1)))
-    val fb = Nested[Future, Option, Int](Future(Some(1)))
+//    import cats.instances.all._
+//    val fa = Nested[Future, Option, Int](Future(Some(1)))
+//    val fb = Nested[Future, Option, Int](Future(Some(1)))
 //    fa.map(x => (y: Int) => y + x).ap(fb) // Argh! says map not a member of Nested
+    import cats.data.Validated
+    import cats.data.Validated.Valid
+//    val nested: Nested[Option, Validated[String, ?], Int] = Nested(Some(Valid(123)))
+//    nested.map(_.toString).value
   }
 
   println(applicative)

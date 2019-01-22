@@ -42,7 +42,11 @@ object MonadX {
     }
     override def point[A](a: ⇒ A): M[A] = {
       log(s"Creating point ($a) [${a.getClass.getSimpleName}]")
-      MonadX(_ ⇒ a, "point")
+      val fn = new Function1[Context, A] {
+        override def apply(v1: Context): A = a
+        override def toString(): String = "point.f"
+      }
+      MonadX(fn, "point")
     }
     def newF[B, A](fa: M[A], f: A => M[B], name: String): Context => B = new Function1[Context, B] {
       def apply(ctx: Context) = {
@@ -91,13 +95,14 @@ boundHello.run
                     Creating point (7) [Integer]
                     'point'
                 point.run
-                    <function1>(ctx) =
+                    point.f(ctx) =
                         '7'
                 point.run Finished
                 '7'
         boundMeaningOfLife.run Finished
         '7'
 boundHello.run Finished
+
 
 * See Monad.map which says: map[A,B](fa: F[A])(f: A => B): F[B] = bind(fa)(a => point(f(a)))
      */

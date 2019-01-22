@@ -108,8 +108,8 @@ boundHello.run Finished
      */
     println(underline("About to run for-comprehension"))
     // Ultimately, we need map and flatMap defined somewhere for the Scala compiler to process this for-comprehension.
-    // They come from scalaz.syntax.FunctorOps.map and scalaz.syntax.BindOps.flatMaP
-    val boundhello = for {
+    // They come from scalaz.syntax.FunctorOps.map and scalaz.syntax.BindOps.flatMap
+    val boundhello: MonadX[Int] = for {
       x <- hello     // "Binding hello..."
       y <- hashcode
     } yield {
@@ -122,7 +122,7 @@ boundHello.run Finished
     val helloHash = boundhello.run(map)
     println()
 
-    println(helloHash) // "18"
+    println(s"$helloHash of type ${helloHash.getClass.getSimpleName}")
   }
   val helloFn = new Function1[Context, String] {
     override def apply(ctx: Context): String = ctx.aString

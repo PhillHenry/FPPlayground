@@ -31,34 +31,41 @@ object MonadX {
       MonadX(_ ⇒ a, "point")
     }
     def newF[B, A](fa: M[A], f: A => M[B]): Context => B = { ctx ⇒
-        val faRan = fa.run(ctx)
-        println(s"Running f($faRan)")
-        val fd    = f(faRan)
-        fd.run(ctx)
-      }
+      val faRan = fa.run(ctx)
+      val fd    = f(faRan)
+      println(s"f($faRan) = $fd where f = $f")
+      fd.run(ctx)
+    }
   }
-
 }
 
 object Monads {
   import scalaz.Scalaz._
   def main(args: Array[String]): Unit = {
-    val hello:    MonadX[String]  = MonadX({ ctx: Context => ctx("hello")   }, "hello")
-    val hashcode: MonadX[Long]    = MonadX({ ctx: Context => ctx.hashCode() }, "hashCode")
+    val helloFn = new Function1[Context, String] {
+      override def apply(ctx: Context): String = ctx("hello")
+      override def toString():          String = "helloFn"
+    }
+    val hashCodeFn = new Function1[Context, Long] {
+      override def apply(ctx: Context): Long    = ctx.hashCode
+      override def toString():          String  = "hashCodeFn"
+    }
+    val hello:    MonadX[String]  = MonadX(helloFn, "hello")
+    val hashcode: MonadX[Long]    = MonadX(hashCodeFn, "hashCode")
     /*
 Binding hello ...
 
 About to run boundhello
 =======================
-Running boundhello ...            [f(ctx) in MonadX.run]
-Running hello ...                 [fa.run(ctx) in newF = 'bonjour']
-Running f(bonjour)                f *appears* to 'pull' in the second line of the for comprehension
-Binding hashCode ...              [via map in for-comprehension - remember that map = flatMap + point *]
-Running boundhashCode ...         [fd.run(ctx) in newF of boundhello]
-Running hashCode ...              [f(ctx) in MonadX.run but this time from in boundhashCode.newF's fa.run(ctx)]
-Running f(1768203508)             [simply from hashcode.run]
-point 18 [Integer]                f *appears* to pull in the point in the map = flatMap + point equation *
-Running point ...                 [fd.run(ctx)]
+Running boundhello ...                              [f(ctx) in MonadX.run]
+Running hello ...                                   [fa.run(ctx) in newF = 'bonjour']
+f(bonjour) = boundhashCode where f = <function1>    f *appears* to 'pull' in the second line of the for comprehension
+Binding hashCode ...                                [via map in for-comprehension - remember that map = flatMap + point *]
+Running boundhashCode ...                           [fd.run(ctx) in newF of boundhello]
+Running hashCode ...                                [f(ctx) in MonadX.run but this time from in boundhashCode.newF's fa.run(ctx)]
+f(-1184959538) = point where f = <function1>        [simply from hashcode.run]
+point 18 [Integer]                                  f *appears* to pull in the point in the map = flatMap + point equation *
+Running point ...                                   [fd.run(ctx)]
 Yielding. x = bonjour [java.lang.String], y = 1768203508 [long]
 
 * See Monad.map which says: map[A,B](fa: F[A])(f: A => B): F[B] = bind(fa)(a => point(f(a)))

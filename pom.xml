@@ -20,6 +20,7 @@
     <encoding>UTF-8</encoding>
     <scala.version>2.11.8</scala.version>
     <scala.compat.version>2.11</scala.compat.version>
+    <scalaz.version>7.2.14</scalaz.version>
   </properties>
 
   <dependencies>
@@ -55,7 +56,17 @@
     <dependency>
       <groupId>org.scalaz</groupId>
       <artifactId>scalaz-core_${scala.compat.version}</artifactId>
-      <version>7.2.14</version>
+      <version>${scalaz.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scalaz</groupId>
+      <artifactId>scalaz-effect_${scala.compat.version}</artifactId>
+      <version>${scalaz.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scalaz</groupId>
+      <artifactId>scalaz-zio_${scala.compat.version}</artifactId>
+      <version>0.5.3</version>
     </dependency>
     <dependency>
       <groupId>org.typelevel</groupId>

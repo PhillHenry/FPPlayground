@@ -78,6 +78,16 @@
       <artifactId>cats-effect_${scala.compat.version}</artifactId>
       <version>1.1.0</version>
     </dependency>
+    <dependency>
+      <groupId>co.fs2</groupId>
+      <artifactId>fs2-core_${scala.compat.version}</artifactId>
+      <version>1.0.3</version>
+    </dependency>
+    <dependency>
+      <groupId>co.fs2</groupId>
+      <artifactId>fs2-io_${scala.compat.version}</artifactId>
+      <version>1.0.3</version>
+    </dependency>
   </dependencies>
 
   <build>

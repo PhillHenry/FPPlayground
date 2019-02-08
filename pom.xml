@@ -106,6 +106,13 @@
               <goal>testCompile</goal>
             </goals>
             <configuration>
+              <compilerPlugins>
+                <compilerPlugin>
+                  <groupId>org.spire-math</groupId>
+                  <artifactId>kind-projector_${scala.compat.version}</artifactId>
+                  <version>0.9.4</version>
+                </compilerPlugin>
+              </compilerPlugins>
               <args>
                 <!--<arg>-make:transitive</arg>-->
                 <arg>-dependencyfile</arg>

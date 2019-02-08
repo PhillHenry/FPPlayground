@@ -26,12 +26,12 @@ object FarewellToFree extends App {
     (F.get("Cats"), F.get("Dogs"), F.put("Mice", "42"), F.get("Cats"))
       .mapN((f, s, _, t) => List(f, s, t).flatten)
 
-//  val analysisInterpreter: KVStore[Const[(Set[String], Map[String, String]), ?]] =
-//    new KVStore[Const[(Set[String], Map[String, String]), ?]] {
-//      def get(key: String) = Const((Set(key), Map.empty))
-//      def put(key: String, a: String) = Const((Set.empty, Map(key -> a)))
-//    }
-//
+  val analysisInterpreter: KVStore[Const[(Set[String], Map[String, String]), ?]] =
+    new KVStore[Const[(Set[String], Map[String, String]), ?]] {
+      def get(key: String) = Const((Set(key), Map.empty))
+      def put(key: String, a: String) = Const((Set.empty, Map(key -> a)))
+    }
+
 //  program(analysisInterpreter).getConst
 
 }

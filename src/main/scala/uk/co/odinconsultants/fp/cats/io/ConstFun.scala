@@ -14,7 +14,10 @@ trait Lens[S, A] {
 
   def modify(s: S)(f: A => A): S = modifyF[Id](s)(f)
 
-  def get(s: S): A
+  def get(s: S): A = {
+    val storedValue = modifyF[Const[A, ?]](s)(a => Const(a))
+    storedValue.getConst
+  }
 }
 
 object ConstFun {
@@ -25,5 +28,9 @@ object ConstFun {
       def map[A, B](fa: Const[X, A])(f: A => B): Const[X, B] =
         Const(fa.getConst)
     }
+
+  def main(args: Array[String]): Unit = {
+    println("run")
+  }
 
 }

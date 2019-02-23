@@ -8,6 +8,14 @@ import cats.implicits._
   */
 object MyIO extends App {
 
+  def fibNonIO(n: Int, a: Long = 0, b: Long = 1): Long = {
+    val b2 = a + b
+    if (n > 0)
+      fibNonIO(n - 1, b, b2)
+    else
+      b2
+  }
+
   def fib(n: Int, a: Long = 0, b: Long = 1): IO[Long] = {
 //    println(s"fib = $n")
     IO(a + b).flatMap { b2 =>
@@ -32,7 +40,7 @@ object MyIO extends App {
   val fibIO = for {
     _   <- putStrlLn("Starting fibonacci ")
     is  <- IO { List(1,2,3) }
-    xs  <- IO { is.map(i => fib(i)) }
+    xs  <- IO { is.map(i => fibNonIO(i)) }
     r   <- xs.map(x => putStrlLn(x.toString)).sequence // x is a Long
   } yield r
   fibIO.unsafeRunSync() // hmm, this just prints out the IOs

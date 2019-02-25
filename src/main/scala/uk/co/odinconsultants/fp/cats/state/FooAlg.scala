@@ -7,16 +7,18 @@ import cats.effect._
 import cats.effect.concurrent.Ref
 
 
-case class Foo(x: String)
-
-trait FooAlg[F[_]] {
-  def get: F[Foo]  // translate into business term
-  def set(foo: Foo): F[Unit]
-}
-
 object FooAlg {
 
-  def main(args: Array[String]): Unit = { println("hello") }
+  case class Foo(x: String)
+
+  trait FooAlg[F[_]] {
+    def get: F[Foo]  // translate into business term
+    def set(foo: Foo): F[Unit]
+  }
+
+  def main(args: Array[String]): Unit = {
+    println("hello")
+  }
 
   def create[F[_]: Sync]: F[FooAlg[F]] =
     Ref.of[F, Foo](Foo("test")).map { ref =>

@@ -14,7 +14,9 @@ object Zipping extends IOApp {
     val zipped = for {
       a <- nums.noneTerminate.hold(1L.some)
       b <- chars.noneTerminate.hold('\0'.some)
-      c <- (a, b).mapN(_ product _).discrete.unNoneTerminate // product is actually FlatMap.product
+      c <-  {(a, b).mapN(_ product _)
+        .discrete
+        .unNoneTerminate} // product is actually FlatMap.product
     } yield c
 
     zipped.evalTap(el => IO { println(el) }).compile.drain.as(ExitCode.Success)

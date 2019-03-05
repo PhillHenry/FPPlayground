@@ -33,7 +33,8 @@ object TipsForWorkingWithFS2 extends IOApp {
       override def withRows(cb: Either[Throwable, Row] => Unit): Unit = println(cb)
     }
 
-    type F[A] = EitherT[IO, Throwable, A]
+//    type F[A] = EitherT[IO, Throwable, A]
+    type F[A] = IO[A]
     implicit val F = implicitly[ConcurrentEffect[F]]
 
     val stream = rows(h)

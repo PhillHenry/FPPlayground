@@ -20,24 +20,34 @@ object TipsForWorkingWithFS2 extends IOApp {
 
   def rows[F[_]](h: CSVHandle)(implicit F: ConcurrentEffect[F]): Stream[F,Row] =
     for {
-      q   <- Stream.eval(fs2.concurrent.Queue.unbounded[F,Either[Throwable,Row]])
+      q   <- Stream.eval(fs2.concurrent.Queue.unbounded[F, Either[Throwable,Row]])
       _   <- Stream.eval { F.delay(h.withRows(e => F.runAsync(q.enqueue1(e))(_ => IO.unit))) }
       row <- q.dequeue.rethrow
     } yield row
+
+  val h: CSVHandle = new CSVHandle {
+    override def withRows(cb: Either[Throwable, Row] => Unit): Unit = println(cb)
+  }
+
+  type F[A] = IO[A]
 
   override def run(args: List[String]): IO[ExitCode] = {
 //    implicit val contextShift: ContextShift[IO] =
 //      IO.contextShift(ExecutionContext.global)
     val p = IO { println("My IO") }
-    val h = new CSVHandle {
-      override def withRows(cb: Either[Throwable, Row] => Unit): Unit = println(cb)
-    }
-
 //    type F[A] = EitherT[IO, Throwable, A]
-    type F[A] = IO[A]
+
     implicit val F = implicitly[ConcurrentEffect[F]]
 
     val stream = rows(h)
+    val syncIO = F.runCancelable(p) { result =>
+      result match {
+        case Left(throwable: Throwable) => IO(ExitCode.Error)
+        case Right(_) => IO(ExitCode.Success)
+      }
+    }
+    val ioCancelable = syncIO.unsafeRunSync() // type is CancelToken[F] which expands to IO[Unit]
+    println(s"a = $ioCancelable")
 
     IO(ExitCode.Success)
   }

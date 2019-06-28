@@ -18,9 +18,9 @@ object IsomorphismMain {
     val a       = "a"
     val b       = 1
 
-    val eitherAMaybeB: Either[A, Maybe[B]]  = Left(a)
-    val eitherAJustB:  Either[A, Maybe[B]]  = Right(Just(b))
-    val eitherMaybeAB: Either[Maybe[A], B]  = Right(b)
+    val eitherAMaybeB: Either[A,        Maybe[B]] = Left(a)
+    val eitherAJustB:  Either[A,        Maybe[B]] = Right(Just(b))
+    val eitherMaybeAB: Either[Maybe[A], B]        = Right(b)
 
     val string2Chars: A         => C = _.toCharArray
     val mb2Chars:     Maybe[B]  => C = { mb => Array(mb.getOrElse(2).toChar) }

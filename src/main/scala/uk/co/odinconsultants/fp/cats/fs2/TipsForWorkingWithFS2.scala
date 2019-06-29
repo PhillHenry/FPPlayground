@@ -26,7 +26,7 @@ object TipsForWorkingWithFS2 extends IOApp {
     } yield row
 
   val h: CSVHandle = new CSVHandle {
-    override def withRows(cb: Either[Throwable, Row] => Unit): Unit = println(cb)
+    override def withRows(cb: Either[Throwable, Row] => Unit): Unit = println(s"PH: withRows $cb")
   }
 
   type F[A] = IO[A]

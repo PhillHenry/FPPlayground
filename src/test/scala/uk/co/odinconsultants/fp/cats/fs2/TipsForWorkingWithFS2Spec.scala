@@ -1,6 +1,6 @@
 package uk.co.odinconsultants.fp.cats.fs2
 
-import cats.effect.{ConcurrentEffect, ContextShift, IO}
+import cats.effect.{ConcurrentEffect, ContextShift, ExitCode, IO}
 import fs2.Stream
 import org.scalatest.{Matchers, WordSpec}
 
@@ -15,8 +15,19 @@ class TipsForWorkingWithFS2Spec extends WordSpec with Matchers {
       implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
       implicit val F                              = implicitly[ConcurrentEffect[F]]
 
+      type O                    = Unit
+      val fn: Row => IO[O]      = x => IO { println(s"PH: IO[$x]") }
       val stream: Stream[F,Row] = rows(h)
+      val g                     = stream.evalMap(fn).compile
+        .drain
+//        .as(ExitCode.Success)
 
+      def handle(e: Either[Throwable, O]): IO[O] = {
+        IO { println("Finished")}
+      }
+
+//      g.runAsync(handle).unsafeRunSync()
+      g.unsafeRunSync()
     }
   }
 

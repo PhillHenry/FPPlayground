@@ -1,11 +1,10 @@
 package uk.co.odinconsultants.fp.cats.applicatives
 
+import cats.data.Validated._
 import cats.data.ValidatedNec
+import cats.implicits._
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.fp.cats.validation.ValidationFixture
-import cats.data._
-import cats.data.Validated._
-import cats.implicits._
 
 class MyApplicativesSpec extends WordSpec with Matchers {
 

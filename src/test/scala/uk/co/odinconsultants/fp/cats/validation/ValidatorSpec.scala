@@ -21,4 +21,17 @@ class ValidatorSpec extends WordSpec with Matchers {
     }
   }
 
+  "Eithers" should {
+
+    type MyEither = Either[Exception, String]
+
+    "return something for the happy path" in {
+      val TW: MyEither = Right(first)
+      val UW: MyEither = Right(second)
+      val VW: MyEither = Right(third)
+      val x = new Validator(TW, UW, VW)
+      x.process shouldBe Right(expected)
+    }
+  }
+
 }

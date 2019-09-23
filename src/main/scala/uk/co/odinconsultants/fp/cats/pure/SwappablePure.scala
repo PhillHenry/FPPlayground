@@ -4,8 +4,6 @@ import cats._, cats.data._, cats.implicits._
 import cats._
 import cats.data._
 import cats.implicits._
-import cats.Monad
-import cats.instances.either._
 
 
 object SwappablePure {

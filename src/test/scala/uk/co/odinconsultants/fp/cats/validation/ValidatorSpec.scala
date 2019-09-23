@@ -19,20 +19,26 @@ class ValidatorSpec extends WordSpec with Matchers {
   }
 
   "Options" should {
-    "return something for the happy path" in new ValidatorFixture {
-      validatesOption.process shouldBe Some(expected)
+    "return something monadic for the happy path" in new ValidatorFixture {
+      validatesOption.doMonads shouldBe Some(expectedStr)
+    }
+    "return something applicative for the happy path" in new ValidatorFixture {
+      validatesOption.doApplicatives shouldBe Some(expectedStr)
     }
   }
 
   "Eithers" should {
-    "return something for the happy path" in new ValidatorFixture {
-      validatesEither.process shouldBe Right(expected)
+    "return something monadic for the happy path" in new ValidatorFixture {
+      validatesEither.doMonads shouldBe Right(expectedStr)
+    }
+    "return something applicative for the happy path" in new ValidatorFixture {
+      validatesEither.doApplicatives shouldBe Right(expectedStr)
     }
   }
 
   "Monads" should {
     "be applicatives" in new ValidatorFixture {
-      validatesOption.doApplicatives shouldBe Some(expected)
+      validatesOption.doApplicatives shouldBe Some(expectedStr)
     }
   }
 

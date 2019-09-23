@@ -1,18 +1,14 @@
 package uk.co.odinconsultants.fp.cats.validation
 
+import cats.data._
 import cats.implicits._
 import org.scalatest.{Matchers, WordSpec}
 
 class ValidatorSpec extends WordSpec with Matchers {
 
-  val first     = "Hello"
-  val second    = "World"
-  val third     = "(the end)"
-  val expected  = s"$first $second $third"
-
   "Options" should {
 
-    "return something for the happy path" in {
+    "return something for the happy path" in new ValidationFixture {
       val TW = Option(first)
       val UW = Option(second)
       val VW = Option(third)
@@ -25,7 +21,7 @@ class ValidatorSpec extends WordSpec with Matchers {
 
     type MyEither = Either[Exception, String]
 
-    "return something for the happy path" in {
+    "return something for the happy path" in new ValidationFixture {
       val TW: MyEither = Right(first)
       val UW: MyEither = Right(second)
       val VW: MyEither = Right(third)

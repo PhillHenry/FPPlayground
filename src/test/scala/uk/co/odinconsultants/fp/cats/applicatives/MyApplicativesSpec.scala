@@ -10,13 +10,11 @@ class MyApplicativesSpec extends WordSpec with Matchers {
 
   "Validated" should {
 
-    type MyValidated = ValidatedNec[Exception, String]
-
     "return a Valid for the happy path" in new ValidationFixture {
       val x = new MyApplicatives(first.validNec, second.validNec, third.validNec)
-      import x._
-      x.process shouldBe Valid(MyStruct(first, second, third))
+      x.process shouldBe Valid(happyPath)
     }
+
   }
 
 }

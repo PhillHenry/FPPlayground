@@ -34,4 +34,11 @@ class MyApplicativesSpec extends WordSpec with Matchers {
     }
   }
 
+  "Either" should {
+    "be just as good " in new ValidatorFixture {
+      val x = new MyApplicatives(r1, r2, r3)
+      x.process shouldBe Right(happyPath)
+    }
+  }
+
 }

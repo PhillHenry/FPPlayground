@@ -4,7 +4,7 @@ import cats.data.Validated._
 import cats.data.{Chain, ValidatedNec}
 import cats.implicits._
 import org.scalatest.{Matchers, WordSpec}
-import uk.co.odinconsultants.fp.cats.validation.ValidationFixture
+import uk.co.odinconsultants.fp.cats.validation.{ValidationFixture, ValidatorFixture}
 
 class MyApplicativesSpec extends WordSpec with Matchers {
 
@@ -24,6 +24,13 @@ class MyApplicativesSpec extends WordSpec with Matchers {
 
       val x = new MyApplicatives(invalid1, valid, invalid2)
       x.process shouldBe Invalid(Chain(first, third))
+    }
+  }
+
+  "Options" should {
+    "be just as good " in new ValidatorFixture {
+      val x = new MyApplicatives(o1, o2, o3)
+      x.process shouldBe Some(happyPath)
     }
   }
 

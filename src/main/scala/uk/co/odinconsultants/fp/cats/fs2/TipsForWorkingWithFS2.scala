@@ -1,10 +1,7 @@
 package uk.co.odinconsultants.fp.cats.fs2
 
-import cats.data.EitherT
 import cats.effect._
 import fs2._
-
-import scala.concurrent.ExecutionContext
 
 /**
   * @see https://underscore.io/blog/posts/2018/03/20/fs2.html
@@ -32,22 +29,18 @@ object TipsForWorkingWithFS2 extends IOApp {
   type F[A] = IO[A]
 
   override def run(args: List[String]): IO[ExitCode] = {
-//    implicit val contextShift: ContextShift[IO] =
-//      IO.contextShift(ExecutionContext.global)
-    val p = IO { println("My IO") }
-//    type F[A] = EitherT[IO, Throwable, A]
+    val p: F[Unit] = IO { println("My IO") }
 
     implicit val F = implicitly[ConcurrentEffect[F]]
 
-    val stream = rows(h)
     val syncIO = F.runCancelable(p) { result =>
       result match {
-        case Left(throwable: Throwable) => IO(ExitCode.Error)
-        case Right(_) => IO(ExitCode.Success)
+        case Left(_: Throwable) => IO(ExitCode.Error)
+        case Right(_)           => IO(ExitCode.Success)
       }
     }
-    val ioCancelable = syncIO.unsafeRunSync() // type is CancelToken[F] which expands to IO[Unit]
-    println(s"a = $ioCancelable")
+    val ioCancelable = syncIO.unsafeRunSync() // type is CancelToken[F] which expands to IO[Unit] [PH: no, it appears to be a cats.effect.IO$Suspend]
+    println(s"ioCancelable = $ioCancelable [${ioCancelable.getClass}]")
 
     IO(ExitCode.Success)
   }

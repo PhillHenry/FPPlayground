@@ -71,12 +71,12 @@
     <dependency>
       <groupId>org.typelevel</groupId>
       <artifactId>cats-core_${scala.compat.version}</artifactId>
-      <version>1.6.0</version>
+      <version>2.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.typelevel</groupId>
       <artifactId>cats-effect_${scala.compat.version}</artifactId>
-      <version>1.2.0</version>
+      <version>2.0.0</version>
     </dependency>
     <dependency>
       <groupId>co.fs2</groupId>
@@ -92,6 +92,11 @@
       <groupId>com.chuusai</groupId>
       <artifactId>shapeless_2.12</artifactId>
       <version>2.3.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.ovoenergy</groupId>
+      <artifactId>fs2-kafka_${scala.compat.version}</artifactId>
+      <version>0.20.1</version>
     </dependency>
   </dependencies>
 

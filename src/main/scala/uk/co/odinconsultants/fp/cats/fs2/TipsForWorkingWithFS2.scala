@@ -15,7 +15,7 @@ object TipsForWorkingWithFS2 extends IOApp {
     def withRows(cb: Either[Throwable,Row] => Unit): Unit
   }
 
-  def rows[F[_]](h: CSVHandle)(implicit F: ConcurrentEffect[F]): Stream[F,Row] =
+  def rows[F[_]](h: CSVHandle)(implicit F: ConcurrentEffect[F]): Stream[F, Row] =
     for {
       q   <- Stream.eval(fs2.concurrent.Queue.unbounded[F, Either[Throwable,Row]])
       _   <- Stream.eval { F.delay(h.withRows(e => F.runAsync(q.enqueue1(e))(_ => IO.unit))) }

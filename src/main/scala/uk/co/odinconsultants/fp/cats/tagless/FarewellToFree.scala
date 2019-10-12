@@ -15,12 +15,12 @@ object FarewellToFree extends App {
   import cats._
   import cats.implicits._
 
-  def program[M[_]: FlatMap, F[_]](a: String)(K: KVStore[M])(implicit P: Parallel[M, F]) =
-    for {
-      _ <- K.put("A", a)
-      x <- (K.get("B"), K.get("C")).parMapN(_ |+| _)
-      _ <- K.put("X", x.getOrElse("-"))
-    } yield x
+//  def program[M[_]: FlatMap, F[_]](a: String)(K: KVStore[M])(implicit P: Parallel[M, F]) =
+//    for {
+//      _ <- K.put("A", a)
+//      x <- (K.get("B"), K.get("C")).parMapN(_ |+| _)
+//      _ <- K.put("X", x.getOrElse("-"))
+//    } yield x
 
   def program[F[_]: Apply](F: KVStore[F]): F[List[String]] =
     (F.get("Cats"), F.get("Dogs"), F.put("Mice", "42"), F.get("Cats"))

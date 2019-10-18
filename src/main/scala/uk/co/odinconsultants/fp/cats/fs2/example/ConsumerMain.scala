@@ -16,7 +16,7 @@ object ConsumerMain extends IOApp {
     val cStream =
       consumerStream[IO]
         .using(consumerSettings)
-        .evalTap(_.subscribeTo("topic"))
+        .evalTap(_.subscribeTo("test"))
         .flatMap(_.stream)
         .mapAsync(25) { committable =>
           println(s"committable = $committable")

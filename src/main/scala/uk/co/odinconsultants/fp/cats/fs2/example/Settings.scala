@@ -4,14 +4,16 @@ import cats.effect.IO
 import fs2.kafka.{AutoOffsetReset, ConsumerSettings, ProducerSettings}
 
 object Settings {
+  val port = 9999
+
   val consumerSettings =
     ConsumerSettings[IO, String, String]
       .withAutoOffsetReset(AutoOffsetReset.Earliest)
-      .withBootstrapServers("localhost:9999")
+      .withBootstrapServers(s"localhost:$port")
       .withGroupId("group")
 
   val producerSettings =
     ProducerSettings[IO, String, String]
-      .withBootstrapServers("localhost:9999")
+      .withBootstrapServers(s"localhost:$port")
 
 }

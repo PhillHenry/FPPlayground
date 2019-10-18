@@ -4,8 +4,6 @@ import cats.data.NonEmptyList
 import cats.{Applicative, ApplicativeError}
 import java.io.{InputStream, OutputStream}
 
-import cats.effect.{ExitCode, IO, IOApp}
-
 import scala.util.Try
 
 class MyApplicativeErrors[F[_]: Applicative](implicit E: ApplicativeError[F, Throwable]) {
@@ -26,6 +24,8 @@ class MyApplicativeErrors[F[_]: Applicative](implicit E: ApplicativeError[F, Thr
 
     allOrNothing(NonEmptyList(fo1, List(fo2, fi)))
   }
+
+  override def toString(): String = s"${this.getClass.getName}: E = $E (${E.getClass.getCanonicalName})"
 }
 
 object MyApplicativeErrors {

@@ -25,6 +25,8 @@ class MyApplicativeErrors[F[_]: Applicative](implicit E: ApplicativeError[F, Thr
     allOrNothing(NonEmptyList(fo1, List(fo2, fi)))
   }
 
+  def pureHappyPath[U](u: U): F[U] = E.pure(u)
+
   override def toString(): String = s"${this.getClass.getName}: E = $E (${E.getClass.getCanonicalName})"
 }
 

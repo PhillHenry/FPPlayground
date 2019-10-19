@@ -1,9 +1,9 @@
 package uk.co.odinconsultants.fp.cats.validation
 
-
 import scala.util.{Failure, Success, Try}
 
 import cats.data.NonEmptyList
+import cats.effect.IO
 import cats.{Applicative, ApplicativeError}
 
 class ValidatedAsApplicative[F[_]: Applicative, X](implicit E: ApplicativeError[F, X]) {
@@ -21,6 +21,12 @@ class ValidatedAsApplicative[F[_]: Applicative, X](implicit E: ApplicativeError[
       case Failure(x) =>
         ??? // not sure how to do Throwable => X so we can do a E.raiseError(x: X)
     }
+  }
+
+  def doIO[U](x: IO[U]): F[U] = {
+    import cats.implicits._
+//    x.to[F]
+    ???
   }
 
   def pure[U, G[_]: Applicative](u: U): G[U] = {

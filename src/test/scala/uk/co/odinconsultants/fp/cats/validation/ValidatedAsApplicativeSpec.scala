@@ -1,19 +1,26 @@
 package uk.co.odinconsultants.fp.cats.validation
 
+import cats.{Applicative, ApplicativeError}
 import cats.data.Validated
-import cats.data.Validated.Valid
+import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{Matchers, WordSpec}
 
 class ValidatedAsApplicativeSpec extends WordSpec with Matchers {
 
-  trait EitherFixture {
+  trait CreationFixture {
+    def create[F[_]: Applicative, X](implicit E: ApplicativeError[F, X]): ValidatedAsApplicative[F, X] = {
+      new ValidatedAsApplicative[F, X]
+    }
+  }
+
+  trait EitherFixture extends CreationFixture {
 
     type MyErrorType    = Throwable
     type MyAppError[T]  = Either[MyErrorType, T]
 
     def underTest: ValidatedAsApplicative[MyAppError, MyErrorType] = {
       import cats.implicits._
-      new ValidatedAsApplicative[MyAppError, MyErrorType]
+      create[MyAppError, MyErrorType]
     }
 
   }
@@ -32,14 +39,14 @@ class ValidatedAsApplicativeSpec extends WordSpec with Matchers {
 //    }
   }
 
-  trait ValidatedFixture {
+  trait ValidatedFixture extends CreationFixture {
 
-    type MyErrorType    = String
-    type MyAppError[T]  = Validated[MyErrorType, T]
+    type MySemiGroup    = String
+    type MyAppError[T]  = Validated[MySemiGroup, T]
 
-    def underTest: ValidatedAsApplicative[MyAppError, MyErrorType] = {
+    def underTest: ValidatedAsApplicative[MyAppError, MySemiGroup] = {
       import cats.implicits._
-      new ValidatedAsApplicative[MyAppError, MyErrorType]
+      create[MyAppError, MySemiGroup]
     }
   }
 
@@ -48,6 +55,11 @@ class ValidatedAsApplicativeSpec extends WordSpec with Matchers {
       val rightMsg = "a string"
       val pure = underTest.pureHappyPath(rightMsg)
       pure shouldBe Valid(rightMsg)
+    }
+    "implicitly treat String as a semigroup" in new ValidatedAsApplicativeFixture with ValidatedFixture {
+      val allValidated = underTest.allOrNothing(mixedList)
+      println(s"allOrNothing = $allValidated")
+      allValidated shouldBe Invalid(invalid1Msg + invalid2Msg)
     }
   }
 

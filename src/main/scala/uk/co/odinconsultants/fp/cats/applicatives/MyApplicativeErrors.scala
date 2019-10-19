@@ -27,13 +27,16 @@ class MyApplicativeErrors[F[_]: Applicative](implicit E: ApplicativeError[F, Thr
 
   def pureHappyPath[U](u: U): F[U] = E.pure(u)
 
+  def pureUnhappyPath(x: Throwable): F[Throwable] = E.raiseError(x)
+
   override def toString(): String = s"${this.getClass.getName}: E = $E (${E.getClass.getCanonicalName})"
 }
 
 object MyApplicativeErrors {
 
+  type MyType[T] = Either[Throwable, T]
+
   def main(args: Array[String]): Unit = {
-    type MyType[T] = Either[Throwable, T]
     import cats.implicits._
     val x = new MyApplicativeErrors[MyType]
     println(x)

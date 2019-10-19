@@ -3,7 +3,7 @@ package uk.co.odinconsultants.fp.cats.validation
 import cats.data.{NonEmptyList, Validated}
 import cats.data.Validated.{Invalid, Valid}
 
-trait ValidatedAsApplicativeFixture {
+trait ValidatedFixture {
   type MyDataType     = String
   type MyErrorType    = String
   type MyValidated[T] = Validated[MyErrorType, T]

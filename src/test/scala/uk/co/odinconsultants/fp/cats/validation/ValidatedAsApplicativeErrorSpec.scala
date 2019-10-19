@@ -9,7 +9,7 @@ import uk.co.odinconsultants.fp.cats.applicatives.MyApplicativeErrors
 class ValidatedAsApplicativeErrorSpec extends WordSpec with Matchers {
 
   "Validated" should {
-    "have an ApplicatativeError if its type has a semigroup" in new ValidatedAsApplicativeFixture {
+    "have an ApplicatativeError if its type has a semigroup" in new ValidatedFixture {
       import cats.data.Validated._
       import cats.implicits._
 
@@ -22,7 +22,7 @@ class ValidatedAsApplicativeErrorSpec extends WordSpec with Matchers {
   }
 
   "Happy path execution" should {
-    "produce a F representing success" in new ValidatedAsApplicativeFixture {
+    "produce a F representing success" in new ValidatedFixture {
       import cats.data.Validated._
       import cats.implicits._
 

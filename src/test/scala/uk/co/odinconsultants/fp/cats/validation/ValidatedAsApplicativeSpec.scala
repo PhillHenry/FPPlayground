@@ -13,33 +13,31 @@ class ValidatedAsApplicativeSpec extends WordSpec with Matchers {
     }
   }
 
-  trait EitherFixture extends CreationFixture {
+  trait EitherApplicativeFixture extends CreationFixture {
 
-    type MyErrorType    = Throwable
-    type MyAppError[T]  = Either[MyErrorType, T]
+    type MyX            = Throwable
+    type MyAppError[T]  = Either[MyX, T]
 
-    def underTest: ValidatedAsApplicative[MyAppError, MyErrorType] = {
+    def underTest: ValidatedAsApplicative[MyAppError, MyX] = {
       import cats.implicits._
-      create[MyAppError, MyErrorType]
+      create[MyAppError, MyX]
     }
 
   }
 
   "An applicative of Either" should {
-    "have a happy path of Right" in new EitherFixture {
+    "have a happy path of Right" in new EitherApplicativeFixture {
       val rightMsg = "a string"
       val pure = underTest.pureHappyPath(rightMsg)
       pure shouldBe Right(rightMsg)
     }
-//    "have an unhappy path of Left" in new EitherFixture {
-//      val rightMsg = "a string"
-//      val x = new Exception(rightMsg)
-//      val pure = underTest.pureUnhappyPath(x)
-//      pure shouldBe Left(x)
-//    }
+    "fail on the first Left" in new EitherApplicativeFixture with EitherFixture {
+      val allValidated = underTest.allOrNothing(mixedList)
+      allValidated shouldBe Left(throwable1)
+    }
   }
 
-  trait ValidatedFixture extends CreationFixture {
+  trait ValidatedApplicativeFixture extends CreationFixture {
 
     type MySemiGroup    = String
     type MyAppError[T]  = Validated[MySemiGroup, T]
@@ -51,14 +49,13 @@ class ValidatedAsApplicativeSpec extends WordSpec with Matchers {
   }
 
   "An applicative of Validated" should {
-    "have a happy path of Right" in new ValidatedFixture {
+    "have a happy path of Right" in new ValidatedApplicativeFixture {
       val rightMsg = "a string"
       val pure = underTest.pureHappyPath(rightMsg)
       pure shouldBe Valid(rightMsg)
     }
-    "implicitly treat String as a semigroup" in new ValidatedAsApplicativeFixture with ValidatedFixture {
+    "implicitly treat String as a semigroup" in new ValidatedApplicativeFixture with ValidatedFixture {
       val allValidated = underTest.allOrNothing(mixedList)
-      println(s"allOrNothing = $allValidated")
       allValidated shouldBe Invalid(invalid1Msg + invalid2Msg)
     }
   }

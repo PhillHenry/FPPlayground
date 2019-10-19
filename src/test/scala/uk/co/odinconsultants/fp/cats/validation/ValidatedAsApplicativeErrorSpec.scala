@@ -6,7 +6,7 @@ import cats.data.{NonEmptyList, Validated}
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.fp.cats.applicatives.MyApplicativeErrors
 
-class ValidatedAsApplicativeError extends WordSpec with Matchers {
+class ValidatedAsApplicativeErrorSpec extends WordSpec with Matchers {
 
   trait ValidatedAsApplicativeFixture {
     type MyDataType     = String

@@ -15,18 +15,16 @@ class ValidatedAsApplicative[F[_]: Applicative, X](implicit E: ApplicativeError[
     }
   }
 
+  def pureHappyPath[U](u: U): F[U] = E.pure(u)
+
+//  def pureUnhappyPath(x: Throwable): F[Throwable] = E.raiseError(x)
+
   def doTry[U](f: => U): F[U] = {
     Try(f) match {
       case Success(x) => pure[U, F](x)
       case Failure(x) =>
         ??? // not sure how to do Throwable => X so we can do a E.raiseError(x: X)
     }
-  }
-
-  def doIO[U](x: IO[U]): F[U] = {
-    import cats.implicits._
-//    x.to[F]
-    ???
   }
 
   def pure[U, G[_]: Applicative](u: U): G[U] = {

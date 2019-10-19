@@ -1,10 +1,9 @@
 package uk.co.odinconsultants.fp.cats.validation
 
-import scala.util.{Failure, Success, Try}
-
 import cats.data.NonEmptyList
-import cats.effect.IO
 import cats.{Applicative, ApplicativeError}
+
+import scala.util.{Failure, Success, Try}
 
 class ValidatedAsApplicative[F[_]: Applicative, X](implicit E: ApplicativeError[F, X]) {
 

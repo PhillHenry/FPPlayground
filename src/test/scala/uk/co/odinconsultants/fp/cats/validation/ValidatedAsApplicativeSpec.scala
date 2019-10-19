@@ -1,7 +1,7 @@
 package uk.co.odinconsultants.fp.cats.validation
 
 import cats.{Applicative, ApplicativeError}
-import cats.data.Validated
+import cats.data.{NonEmptyChain, Validated, ValidatedNec}
 import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{Matchers, WordSpec}
 
@@ -9,6 +9,7 @@ class ValidatedAsApplicativeSpec extends WordSpec with Matchers {
 
   trait CreationFixture {
     def create[F[_]: Applicative, X](implicit E: ApplicativeError[F, X]): ValidatedAsApplicative[F, X] = {
+      println(s"E = $E")
       new ValidatedAsApplicative[F, X]
     }
   }
@@ -54,10 +55,31 @@ class ValidatedAsApplicativeSpec extends WordSpec with Matchers {
       val pure = underTest.pureHappyPath(rightMsg)
       pure shouldBe Valid(rightMsg)
     }
+    //  (note the Semigroup[E] in ats.data.ValidatedInstances.catsDataApplicativeErrorForValidated)
     "implicitly treat String as a semigroup" in new ValidatedApplicativeFixture with ValidatedFixture {
       val allValidated = underTest.allOrNothing(mixedList)
       allValidated shouldBe Invalid(invalid1Msg + invalid2Msg)
     }
   }
+
+  trait ValidatedNecApplicativeFixture extends CreationFixture {
+
+    type MySemiGroup    = NonEmptyChain[String]
+    type MyAppError[T]  = ValidatedNec[String, T]
+
+    def underTest: ValidatedAsApplicative[MyAppError, MySemiGroup] = {
+      import cats.implicits._
+      create[MyAppError, MySemiGroup]
+    }
+  }
+
+  "An applicative of ValidatedNec" should {
+    "have a happy path of Right" in new ValidatedNecApplicativeFixture {
+      val rightMsg = "a string"
+      val pure = underTest.pureHappyPath(rightMsg)
+      pure shouldBe Valid(rightMsg)
+    }
+  }
+
 
 }

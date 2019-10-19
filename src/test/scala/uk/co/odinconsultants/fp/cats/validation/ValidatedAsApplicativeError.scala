@@ -24,7 +24,6 @@ class ValidatedAsApplicativeError extends WordSpec with Matchers {
 
   "Validated" should {
     "have an ApplicatativeError if its type has a semigroup" in new ValidatedAsApplicativeFixture {
-      import cats.data._
       import cats.data.Validated._
       import cats.implicits._
 
@@ -38,12 +37,11 @@ class ValidatedAsApplicativeError extends WordSpec with Matchers {
 
   "Happy path execution" should {
     "produce a F representing success" in new ValidatedAsApplicativeFixture {
-      import cats.data._
       import cats.data.Validated._
       import cats.implicits._
 
       val x = new ValidatedAsApplicative[MyValidated, MyErrorType]
-      val success = x.doIO("hello")
+      val success = x.doTry("hello")
       success shouldBe Valid("hello")
     }
   }

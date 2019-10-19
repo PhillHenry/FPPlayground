@@ -32,13 +32,3 @@ class MyApplicativeErrors[F[_]: Applicative](implicit E: ApplicativeError[F, Thr
   override def toString(): String = s"${this.getClass.getName}: E = $E (${E.getClass.getCanonicalName})"
 }
 
-object MyApplicativeErrors {
-
-  type MyType[T] = Either[Throwable, T]
-
-  def main(args: Array[String]): Unit = {
-    import cats.implicits._
-    val x = new MyApplicativeErrors[MyType]
-    println(x)
-  }
-}

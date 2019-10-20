@@ -1,6 +1,5 @@
 package uk.co.odinconsultants.fp.cats.bifunctor
 
-import cats.data.Validated
 import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.fp.cats.validation.{EitherFixture, ValidatedFixture}
@@ -21,11 +20,9 @@ class MyBifunctorSpec extends WordSpec with Matchers {
     }
 
     "be agnostic as to whether it's an Validated (Invalid)" in new ValidatedFixture {
-      import cats.implicits._
       agnostic(invalidThrowable1) shouldBe Invalid(MyException(invalid1Msg))
     }
     "be agnostic as to whether it's an Validated (Valid)" in new ValidatedFixture {
-      import cats.implicits._
       agnostic(validThrowable1) shouldBe Valid(biMappedStr(valid1Msg))
     }
 

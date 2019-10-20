@@ -8,7 +8,8 @@ trait EitherFixture {
   type MyValidated[T]                                   = Either[MyErrorType, T]
   val invalid1Msg                                       = "invalid"
   val invalid2Msg                                       = "invalid2"
-  val valid1:   Either[MyErrorType, MyDataType]         = Right("valid1")
+  val valid1Msg                                         = "valid1"
+  val valid1:   Either[MyErrorType, MyDataType]         = Right(valid1Msg)
   val throwable1                                        = new Throwable(invalid1Msg)
   val invalid1: Either[MyErrorType, MyDataType]         = Left(throwable1)
   val valid2:   Either[MyErrorType, MyDataType]         = Right("valid2")

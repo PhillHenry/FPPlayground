@@ -1,7 +1,7 @@
 package uk.co.odinconsultants.fp.cats.validation
 
 import cats.{Applicative, ApplicativeError}
-import cats.data.{NonEmptyChain, NonEmptyList, Validated, ValidatedNec}
+import cats.data.{EitherNel, NonEmptyChain, NonEmptyList, Validated, ValidatedNec}
 import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{Matchers, WordSpec}
 
@@ -15,36 +15,39 @@ class ValidatedAsApplicativeSpec extends WordSpec with Matchers {
   }
 
 
-  trait EitherNecApplicativeFixture extends CreationFixture {
+  trait EitherNelApplicativeFixture extends CreationFixture {
 
     type MyErrorType    = String
     type MyDataType     = String
     type MyX            = NonEmptyList[MyErrorType]
-    type MyAppError[T]  = Either[MyX, T]
+    type MyF[T]         = EitherNel[MyErrorType, T]
 
-    def underTest: ValidatedAsApplicative[MyAppError, MyX] = {
+    def underTest: ValidatedAsApplicative[MyF, MyX] = {
       import cats.implicits._
-      create[MyAppError, MyX]
+      create[MyF, MyX]
     }
 
-    def myFailure(x: String): MyAppError[MyDataType] = Left(NonEmptyList(x, List.empty))
+    def myFailure(x: String): MyF[MyDataType] = Left(NonEmptyList(x, List.empty))
 
-    val valid1: MyAppError[MyDataType] = Right("valid1")
-    val valid2: MyAppError[MyDataType] = Right("valid2")
+    val valid1: MyF[MyDataType] = Right("valid1")
+    val valid2: MyF[MyDataType] = Right("valid2")
     val invalid1Msg = "invalid1Msg"
     val invalid2Msg = "invalid2Msg"
+    val invalid1: MyF[String] = myFailure(invalid1Msg)
+    val invalid2: MyF[String] = myFailure(invalid2Msg)
   }
 
   "An applicative of EitherNel" should {
-    "have a happy path of Right" in new EitherNecApplicativeFixture {
+    "have a happy path of Right" in new EitherNelApplicativeFixture {
       val rightMsg = "a string"
       val pure = underTest.pureHappyPath(rightMsg)
       pure shouldBe Right(rightMsg)
     }
-    "fail on the first Left" in new EitherNecApplicativeFixture {
-      val xs: NonEmptyList[MyAppError[String]] = NonEmptyList(valid1, List(myFailure(invalid1Msg), valid2, myFailure(invalid2Msg)))
+    "fail on the first Left" in new EitherNelApplicativeFixture {
+
+      val xs: NonEmptyList[MyF[String]] = NonEmptyList(valid1, List(invalid1, valid2, invalid2))
       val allValidated = underTest.allOrNothing(xs)
-      allValidated shouldBe myFailure(invalid1Msg)
+      allValidated shouldBe invalid1
     }
   }
 

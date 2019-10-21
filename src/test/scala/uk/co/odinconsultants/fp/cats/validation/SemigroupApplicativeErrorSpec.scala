@@ -25,13 +25,21 @@ class SemigroupApplicativeErrorSpec extends WordSpec with Matchers {
     val invalid2Msg = "invalid2Msg"
     val invalid1: MyF[String] = myFailure(invalid1Msg)
     val invalid2: MyF[String] = myFailure(invalid2Msg)
+    val mixed: NonEmptyList[MyF[String]] = NonEmptyList(valid1, List(invalid1, valid2, invalid2))
   }
 
   "An applicative of EitherNel" should {
     "fail on the first Left" in new EitherNelApplicativeFixture {
-      val xs: NonEmptyList[MyF[String]] = NonEmptyList(valid1, List(invalid1, valid2, invalid2))
-      val allValidated = underTest.allOrNothing(xs)
+      val allValidated = underTest.allOrNothing(mixed)
       allValidated shouldBe myFailure(invalid1Msg +  invalid2Msg)
+    }
+    "be flatMap-able" in new EitherNelApplicativeFixture {
+      for {
+        x <- underTest.allOrNothing(mixed)
+        y <- underTest.allOrNothing(mixed)
+      } yield {
+        x + y
+      } shouldBe myFailure(invalid1Msg + invalid2Msg + invalid1Msg + invalid2Msg)
     }
   }
 }

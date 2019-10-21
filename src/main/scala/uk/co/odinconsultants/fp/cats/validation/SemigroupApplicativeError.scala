@@ -12,4 +12,11 @@ class SemigroupApplicativeError[F[_]: Applicative, X: Semigroup](implicit E: App
     }
   }
 
+  def aggregate[A: Semigroup](first: F[A], second: F[A], third: F[A]): F[A] = {
+    import cats.implicits._
+    (first, second, third).mapN { case (x, y, z) =>
+        x.combine(y).combine(z)
+    }
+  }
+
 }

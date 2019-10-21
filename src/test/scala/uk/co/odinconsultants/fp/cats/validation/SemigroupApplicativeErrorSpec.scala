@@ -41,5 +41,9 @@ class SemigroupApplicativeErrorSpec extends WordSpec with Matchers {
         x + y
       } shouldBe myFailure(invalid1Msg + invalid2Msg + invalid1Msg + invalid2Msg)
     }
+    "be aggregated" in new EitherNelApplicativeFixture {
+      import cats.implicits._
+      underTest.aggregate(valid1, invalid1, invalid2) shouldBe myFailure(invalid1Msg + invalid2Msg)
+    }
   }
 }

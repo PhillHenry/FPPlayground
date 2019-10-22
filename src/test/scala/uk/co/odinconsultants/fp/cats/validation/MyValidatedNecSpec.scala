@@ -18,11 +18,7 @@ class MyValidatedNecSpec extends WordSpec with Matchers {
 
       val result = aggregate(mixed)
 
-      result.isInvalid shouldBe true
-      result.foreach { errors =>
-        errors.length shouldBe 1
-      }
-//      result shouldBe Invalid(concatFn(failureMsg1, failureMsg2))
+      result shouldBe Invalid("\n" + concatFn(failureMsg1, failureMsg2))
     }
   }
 

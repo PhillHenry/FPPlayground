@@ -19,4 +19,11 @@ object MyProductR {
     }
   }
 
+  def aggregateEither[A](xs: NonEmptyList[Either[String, A]]): Either[String, A] = {
+    import cats.implicits._
+    xs.tail.foldLeft(xs.head) { case (a, x) =>
+      a *> x
+    }
+  }
+
 }

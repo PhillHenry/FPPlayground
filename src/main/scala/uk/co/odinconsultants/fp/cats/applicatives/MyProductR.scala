@@ -1,6 +1,6 @@
 package uk.co.odinconsultants.fp.cats.applicatives
 
-import cats.Applicative
+import cats.{Applicative, Semigroup}
 import cats.data.{NonEmptyList, Validated}
 
 object MyProductR {
@@ -19,7 +19,7 @@ object MyProductR {
     }
   }
 
-  def aggregateEither[A](xs: NonEmptyList[Either[String, A]]): Either[String, A] = {
+  def aggregateEither[A: Semigroup](xs: NonEmptyList[Either[String, A]]): Either[String, A] = {
     import cats.implicits._
     xs.tail.foldLeft(xs.head) { case (a, x) =>
       a *> x

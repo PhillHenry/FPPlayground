@@ -1,5 +1,6 @@
 package uk.co.odinconsultants.fp.cats.applicatives
 
+import cats.{Applicative, ApplicativeError}
 import cats.data.NonEmptyList
 import cats.data.Validated.Invalid
 import org.scalatest.{Matchers, WordSpec}
@@ -27,6 +28,10 @@ class MyProductRSpec extends WordSpec with Matchers {
       val failure2: MyEither[String] = Left(failureMsg2)
 
       import cats.implicits._
+
+      val applicative    = implicitly[Applicative[MyEither]]
+      val applicativeErr = implicitly[ApplicativeError[MyEither, String]]
+
       val result = aggregateEither(NonEmptyList.of(success1, failure1, success2, failure2))
       result shouldBe Left(failureMsg1 + failureMsg2)
     }

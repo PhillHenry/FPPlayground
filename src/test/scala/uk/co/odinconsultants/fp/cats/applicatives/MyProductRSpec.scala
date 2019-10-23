@@ -18,14 +18,15 @@ class MyProductRSpec extends WordSpec with Matchers {
       result shouldBe Invalid(invalid1Msg + invalid2Msg)
     }
     "exploit semigroup behaviour of Either" ignore new EitherStringFixture {
-
       import cats.implicits._
 
-      val applicative    = implicitly[Applicative[MyEither]]
-      val applicativeErr = implicitly[ApplicativeError[MyEither, String]]
+      //implicit val applicative    = implicitly[Applicative[MyEither]]
+      //implicit val applicativeErr = implicitly[ApplicativeError[MyEither, String]]
 
-
-      aggregateEither(mixed) shouldBe Left(failureMsg1 + failureMsg2)
+      // No, beacuse that's the difference between Either and Validated
+      // It's all down to the `product` function
+      // See https://github.com/typelevel/cats/blob/master/core/src/main/scala/cats/data/Validated.scala#L516-L522
+      productR(mixed) shouldBe Left(failureMsg1 + failureMsg2)
     }
   }
 

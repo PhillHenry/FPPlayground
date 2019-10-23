@@ -6,6 +6,7 @@ import cats.data.{NonEmptyList, Validated}
 object MyProductR {
 
   def productR[F[_]: Applicative, A](xs: NonEmptyList[F[A]]): F[A] = {
+    println(s"productR $xs")
     import cats.implicits._
     xs.tail.foldLeft(xs.head) { case (a, x) =>
       a *> x

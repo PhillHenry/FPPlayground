@@ -8,8 +8,14 @@ import cats.effect._
 object MyCommutativeReduce extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
-    val maybeIOA = concurrentReduceOption((1 to 100).toArray)(_ + _)
-    maybeIOA.map(_ => ExitCode.Success)
+    val io = for {
+      calc  <- concurrentReduceOption((1 to 100).toArray)(_ + _)
+      _     <- IO { println(s"calculation = $calc")}
+    } yield {
+      calc
+    }
+
+    io.map(_ => ExitCode.Success)
   }
 
 //  Oleg Pyzhcov @oleg-py 14:09

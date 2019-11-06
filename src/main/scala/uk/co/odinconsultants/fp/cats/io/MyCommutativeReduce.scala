@@ -1,9 +1,7 @@
 package uk.co.odinconsultants.fp.cats.io
 
-import cats.NonEmptyParallel
-import cats.effect.IO
+import cats.effect.{IO, _}
 import cats.implicits._
-import cats.effect._
 
 object MyCommutativeReduce extends IOApp {
 
@@ -20,7 +18,9 @@ object MyCommutativeReduce extends IOApp {
 
 //  Oleg Pyzhcov @oleg-py 14:09
 //  @drdozer if you want to use IO for multi-core parallelism in intersecting sets, something like this should work:
-  def concurrentReduceOption[A](data: Array[A])(op: (A, A) => A)(implicit cs: ContextShift[IO], nep: NonEmptyParallel[IO]): IO[Option[A]] = {
+  // PH: these are needed outside IOApp:
+  // (implicit cs: ContextShift[IO], nep: NonEmptyParallel[IO])
+  def concurrentReduceOption[A](data: Array[A])(op: (A, A) => A): IO[Option[A]] = {
     def go(i: Int, j: Int): IO[A] = IO.suspend {
       if (i == j) IO.pure(data(i))
       else if (j - i == 1) IO.pure(op(data(i), data(j)))

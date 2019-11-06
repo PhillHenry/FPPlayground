@@ -25,6 +25,7 @@ object MyIO extends App {
         IO.pure(b2)
     }
   }
+  println(fib(5).unsafeRunSync)
 
   def putStrlLn(value: String) = IO(println(value))
   val readLn = IO(scala.io.StdIn.readLine)

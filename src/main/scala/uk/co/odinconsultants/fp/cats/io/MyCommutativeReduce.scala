@@ -10,7 +10,7 @@ object MyCommutativeReduce extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     val io = for {
       calc  <- concurrentReduceOption((1 to 100).toArray)(_ + _)
-      _     <- IO { println(s"calculation = $calc")}
+      _     <- IO { println(s"calculation = $calc") }
     } yield {
       calc
     }
@@ -21,9 +21,6 @@ object MyCommutativeReduce extends IOApp {
 //  Oleg Pyzhcov @oleg-py 14:09
 //  @drdozer if you want to use IO for multi-core parallelism in intersecting sets, something like this should work:
   def concurrentReduceOption[A](data: Array[A])(op: (A, A) => A)(implicit cs: ContextShift[IO], nep: NonEmptyParallel[IO]): IO[Option[A]] = {
-//    import cats.effect.IO
-//    import scala.concurrent.ExecutionContext.Implicits.global
-//    implicit val contextShift = IO.contextShift(global)
     def go(i: Int, j: Int): IO[A] = IO.suspend {
       if (i == j) IO.pure(data(i))
       else if (j - i == 1) IO.pure(op(data(i), data(j)))

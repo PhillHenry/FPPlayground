@@ -14,16 +14,25 @@ object ProducerMain  extends IOApp {
       producerStream[IO]
         .using(producerSettings)
         .flatMap { producer =>
+          println(s"producer = $producer")
           consumerStream[IO]
             .using(consumerSettings)
-            .evalTap(_.subscribeTo("topic"))
-            .flatMap(_.partitionedStream)
+            .evalTap { kafkaConsumer =>
+              println(s"kafkaConsumer = $kafkaConsumer")
+              kafkaConsumer.subscribeTo(topicName)
+            }
+            .flatMap { kafkaConsumer =>
+              println(s"kafkaConsumer = $kafkaConsumer")
+              kafkaConsumer.partitionedStream
+            }
             .map { partition =>
+              println(s"partition = $partition")
               partition
                 .map { committable =>
-                  val key = committable.record.key
-                  val value = committable.record.value
-                  val record = ProducerRecord("topic", key, value)
+                  println(s"committable = $committable")
+                  val key     = committable.record.key
+                  val value   = committable.record.value
+                  val record  = ProducerRecord(topicName, key, value)
                   ProducerRecords.one(record, committable.offset)
                 }
                 .through(produce(producerSettings, producer))
@@ -32,7 +41,5 @@ object ProducerMain  extends IOApp {
         }
 
     pStream.compile.drain.as(ExitCode.Success)
-
-
   }
 }

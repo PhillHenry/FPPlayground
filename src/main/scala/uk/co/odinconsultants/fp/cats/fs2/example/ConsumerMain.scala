@@ -7,6 +7,9 @@ import fs2.kafka._
 
 import scala.concurrent.duration._
 
+/**
+ * https://ovotech.github.io/fs2-kafka/docs/consumers
+ */
 object ConsumerMain extends IOApp {
 
   import Settings._
@@ -19,6 +22,9 @@ object ConsumerMain extends IOApp {
   val subscribeFn: MyKafkaConsumer => IO[Unit]
     = _.subscribeTo(topicName)
 
+  /**
+   * When using stream, records on all assigned partitions end up in the same Stream.
+   */
   val toStreamFn: MyKafkaConsumer => Stream[IO, CommittableConsumerRecord[IO, String, String]]
     = _.stream
 

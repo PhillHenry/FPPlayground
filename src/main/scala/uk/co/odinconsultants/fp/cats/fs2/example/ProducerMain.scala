@@ -4,6 +4,9 @@ import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.functor._
 import fs2.kafka._
 
+/**
+ * @see https://ovotech.github.io/fs2-kafka/docs/consumers
+ */
 object ProducerMain  extends IOApp {
 
   import Settings._
@@ -25,7 +28,7 @@ object ProducerMain  extends IOApp {
               println(s"kafkaConsumer = $kafkaConsumer")
               kafkaConsumer.partitionedStream
             }
-            .map { partition =>
+            .map { partition => // "a Stream of records for a single topic-partition"
               println(s"partition = $partition")
               partition
                 .map { committable =>

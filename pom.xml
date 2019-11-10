@@ -76,6 +76,11 @@
     </dependency>
     <dependency>
       <groupId>org.typelevel</groupId>
+      <artifactId>cats-effect-laws_${scala.compat.version}</artifactId>
+      <version>${cats.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.typelevel</groupId>
       <artifactId>cats-testkit_${scala.compat.version}</artifactId>
       <version>${cats.version}</version>
     </dependency>

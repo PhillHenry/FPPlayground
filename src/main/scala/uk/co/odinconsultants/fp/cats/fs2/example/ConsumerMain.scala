@@ -11,21 +11,31 @@ object ConsumerMain extends IOApp {
   import ConsumerKafka._
 
   override def run(args: List[String]): IO[ExitCode] = {
-    // code taken (and bastardised) from https://ovotech.github.io/fs2-kafka/docs/consumers
-    val cStream =
-      kafkaConsumer
-        .evalTap(subscribeFn)                         // Stream[F2, O]
-        .flatMap(toStreamFn)                          // Stream[F2, O2]
-        .mapAsync(25)(commitFn)         // Stream[F2, O2]
-        .through(producerPipe)                        // Stream[F2, O2] (from the doc for through: "Transforms this stream using the given `Pipe`.")
-        .map(passingThroughFn)                        // Stream[F, O2]
-        .through(committingBatch)                     // Stream[F2, O2]
+    val stream = pipeline(kafkaConsumer, subscribeFn, toStreamFn, commitFn, producerPipe, passingThroughFn, committingBatch)
 
     println("Draining stream")
-    val result = cStream.compile.drain.as(ExitCode.Success)
+    val result = stream.compile.drain.as(ExitCode.Success)
     println("Done.")
 
     result
+  }
+
+  import fs2.{Stream, Pipe}
+  /**
+   * @tparam K KafkaConsumer
+   * @tparam C CommittableConsumerRecord
+   * @tparam P MyProducer (ProducerRecords)
+   * @tparam R MyProducerResult (ProducerResult)
+   * @tparam O CommittableOffset[IO]
+   */
+  def pipeline[K, C, P, R, O](s:              Stream[IO, K],
+                              subscribe:      K => IO[Unit],
+                              toRecords:      K => Stream[IO, C],
+                              commitRead:     C => IO[P],
+                              producerPipe:   Pipe[IO, P, R],
+                              toWriteRecords: R => O,
+                              commitWrite:    Pipe[IO, O, Unit]): Stream[IO, Unit] = {
+    s.evalTap(subscribe).flatMap(toRecords).mapAsync(25)(commitRead).through(producerPipe).map(toWriteRecords).through(commitWrite)
   }
 
 }

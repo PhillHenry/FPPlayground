@@ -20,7 +20,7 @@ object Settings {
       .withBootstrapServers(s"localhost:$port")
       .withGroupId("group")
 
-  val producerSettings =
+  val producerSettings: ProducerSettings[IO, String, String] =
     ProducerSettings[IO, String, String]
       .withBootstrapServers(s"localhost:$port")
 

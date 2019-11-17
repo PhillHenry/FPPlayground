@@ -1,11 +1,16 @@
 package uk.co.odinconsultants.fp.cats.fs2.example
 
 import cats.effect.{ConcurrentEffect, ContextShift, IO, Timer}
-import fs2.Stream
+import fs2.{Pipe, Stream}
 import fs2.kafka.{CommittableConsumerRecord, CommittableOffset, ConsumerRecord, KafkaConsumer, ProducerRecord, ProducerRecords, ProducerResult, consumerStream}
-import uk.co.odinconsultants.fp.cats.fs2.example.ConsumerMain.MyPipe
+
+import scala.concurrent.duration._
 
 object ConsumerKafka {
+
+  type MyPipe = Stream[IO, ProducerRecords[String, String, CommittableOffset[IO]]] => Stream[IO, ProducerResult[String, String, CommittableOffset[IO]]]
+
+  type BatchPipe = Pipe[IO, CommittableOffset[IO], Unit]
 
   import Settings._
 
@@ -35,11 +40,13 @@ object ConsumerKafka {
 
   val passingThroughFn: ProducerResult[String, String, CommittableOffset[IO]] => CommittableOffset[IO] = _.passthrough
 
-  def kafkaConsumer(implicit IO: ConcurrentEffect[IO],  context: ContextShift[IO], timer: Timer[IO]): Stream[IO, KafkaConsumer[IO, String, String]] =
+  def kafkaConsumer(implicit io: ConcurrentEffect[IO], context: ContextShift[IO], timer: Timer[IO]): Stream[IO, KafkaConsumer[IO, String, String]] =
     consumerStream[IO]
       .using(consumerSettings)
 
-//  def producerPipe[T](implicit IO: ConcurrentEffect[IO],  context: ContextShift[IO]): MyPipe[T]  = {
-//    fs2.kafka.produce(producerSettings)
-//  }
+  def producerPipe(implicit f: ConcurrentEffect[IO],  context: ContextShift[IO]): MyPipe =
+    fs2.kafka.produce(producerSettings)(f, context)
+
+  def committingBatch(implicit io: ConcurrentEffect[IO], timer: Timer[IO]): BatchPipe = fs2.kafka.commitBatchWithin(500, 15.seconds)
+
 }

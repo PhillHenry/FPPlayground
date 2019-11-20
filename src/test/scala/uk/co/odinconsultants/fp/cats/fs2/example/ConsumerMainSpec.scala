@@ -1,8 +1,9 @@
 package uk.co.odinconsultants.fp.cats.fs2.example
 
 import cats.effect.IO
+import cats.effect.concurrent.Ref
 import org.scalatest.{Matchers, WordSpec}
-import fs2.{Stream, Pipe}
+import fs2.{Pipe, Stream}
 
 class ConsumerMainSpec extends WordSpec with Matchers {
 
@@ -15,16 +16,34 @@ class ConsumerMainSpec extends WordSpec with Matchers {
 
   "Kafka pipeline" should {
     "Read, write and commit" in {
-      val nRead = 10
+      /*
+      "StateT is not safe to use with effect types, because it's not safe in the face of concurrent access.
+      Instead, consider using a Ref (from either fs2 or cats-effect, depending what version)."
+      https://stackoverflow.com/questions/51624763/fs2-stream-with-statetio-periodically-dumping-state
+       */
+      val nToRead = 10
+      val nCommitted = Ref[IO].of(1)
 
       val subscribe: MockKafka => IO[Unit] =
-        _ => IO { println("subscribed") }
+        _ => IO {
+          println("subscribed")
+        }
 
       val toRecords: MockKafka => Stream[IO, MockRecord] =
-        _ => Stream.emits((1 to nRead).map(x => MockRecord(x))).covary[IO]
+        _ => Stream.emits((1 to nToRead).map(x => MockRecord(x))).covary[IO]
 
-      val commitRead: MockRecord => IO[MockProducerRecords] =
-        r => IO { println(s"commiting $r") ; MockProducerRecords(r.id) }
+      val commitRead: MockRecord => IO[MockProducerRecords] = { r =>
+        val update: IO[Unit] = for {
+          _ <- IO {  println(s"commiting $r") }
+          n <- nCommitted
+        } yield {
+          n.update(_ + 1)
+        }
+
+        update.flatMap { _ =>
+          IO { MockProducerRecords(r.id) }
+        }
+      }
 
       val producerPipe: Pipe[IO, MockProducerRecords, MockRecord] =
         s => s.map(p => MockRecord(p.id))
@@ -38,7 +57,14 @@ class ConsumerMainSpec extends WordSpec with Matchers {
       val x = pipeline(Stream.emit(MockKafka()).covary[IO], subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
 
       x.compile.drain.unsafeRunSync()
-      // TODO some assertions
+
+      val result = for {
+        n <- nCommitted
+        x <- n.get
+      } yield {
+        x
+      }
+      result.unsafeRunSync() shouldBe nToRead
     }
   }
 

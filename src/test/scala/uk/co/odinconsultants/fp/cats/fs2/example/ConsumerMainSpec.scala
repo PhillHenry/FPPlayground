@@ -24,8 +24,10 @@ class ConsumerMainSpec extends WordSpec with Matchers {
       https://stackoverflow.com/questions/51624763/fs2-stream-with-statetio-periodically-dumping-state
        */
       val nToRead = 10
-      val nCommitted = Ref[IO].of(1)
+      val nCommitted = Ref[IO].of(0)
       val nCommittedAtomicInt = new AtomicInteger(0)
+
+      val s = Stream.emit(MockKafka()).covary[IO]
 
       val subscribe: MockKafka => IO[Unit] =
         _ => IO {
@@ -34,23 +36,6 @@ class ConsumerMainSpec extends WordSpec with Matchers {
 
       val toRecords: MockKafka => Stream[IO, MockRecord] =
         _ => Stream.emits((1 to nToRead).map(x => MockRecord(x))).covary[IO]
-
-      val commitRead: MockRecord => IO[MockProducerRecords] = { r =>
-        val update: IO[IO[Unit]] = for {
-          _ <- IO {  println(s"commiting $r") }
-          n <- nCommitted
-        } yield {
-          n.update(_ + 1)
-        }
-
-        update.flatMap { updateIO: IO[Unit] =>
-          val io = IO { MockProducerRecords(r.id) }
-          println("unsafeRunSync = " + updateIO.unsafeRunSync())
-          nCommittedAtomicInt.incrementAndGet()
-//           (Stream.emit(io))
-          io
-        }
-      }
 
       val producerPipe: Pipe[IO, MockProducerRecords, MockRecord] =
         s => s.map(p => MockRecord(p.id))
@@ -61,18 +46,21 @@ class ConsumerMainSpec extends WordSpec with Matchers {
       val commitWrite: Pipe[IO, MockCommittableOffset, Unit] =
         s => s.map(o => println(s"commitWrite $o"))
 
-      val x = pipeline(Stream.emit(MockKafka()).covary[IO], subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
 
-      x.compile.drain.unsafeRunSync()
+      Stream.eval(nCommitted).flatMap { state =>
+        val commitRead: MockRecord => IO[MockProducerRecords] = r => state.update(_ + 1).flatMap( _ => IO { MockProducerRecords(r.id) } )
 
-      val result = for {
-        n <- nCommitted
-        x <- n.get
-      } yield {
-        x
-      }
-//      result.unsafeRunSync() shouldBe nToRead
-      nCommittedAtomicInt.get shouldBe nToRead
+        val x = pipeline(s, subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
+
+        x.compile.drain.unsafeRunSync()
+        state.get.flatMap(x => IO {
+          x shouldBe nToRead
+          println(s"x = $x")
+        } ).unsafeRunSync()
+
+        s
+      }.compile.drain.unsafeRunSync()
+
     }
   }
 

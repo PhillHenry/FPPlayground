@@ -4,7 +4,8 @@ import scala.util.Try
 
 object MixedForComprehension {
 
-  def anOption(x: String): Try[Option[String]] = Try { Option(x) }
+  def tryOption(x: String): Try[Option[String]] = Try { Option(x) }
+  def anOption(x: String): Option[String] = Option(x)
 
   def aTry(x: => String): Try[String] = Try(x)
 
@@ -13,12 +14,12 @@ object MixedForComprehension {
     import cats.data._
     import cats.implicits._
     val result = for {
-      o <- OptionT(anOption("test"))
+      o <- OptionT(tryOption("test"))
       t <- OptionT.liftF(aTry(o))
     } yield {
       t
     }
-    println(s"result = $result")
+    println(s"result = $result") // OptionT(Success(Some(test)))
   }
 
   /**

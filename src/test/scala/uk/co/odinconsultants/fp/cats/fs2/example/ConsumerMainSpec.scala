@@ -17,7 +17,7 @@ class ConsumerMainSpec extends WordSpec with Matchers {
   case class MockCommittableOffset(id: Int)
 
   "Kafka pipeline" should {
-    "Read, write and commit" ignore {
+    "Read, write and commit" in {
       /*
       "StateT is not safe to use with effect types, because it's not safe in the face of concurrent access.
       Instead, consider using a Ref (from either fs2 or cats-effect, depending what version)."
@@ -46,18 +46,17 @@ class ConsumerMainSpec extends WordSpec with Matchers {
       val commitWrite: Pipe[IO, MockCommittableOffset, Unit] =
         s => s.map(o => println(s"commitWrite $o"))
 
-
       Stream.eval(nCommitted).flatMap { state =>
         val commitRead: MockRecord => IO[MockProducerRecords] = r => state.update(_ + 1).flatMap( _ => IO { MockProducerRecords(r.id) } )
 
         val x = pipeline(s, subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
 
-        x.evalMap { _ =>
+        x.append {
           val assertion: IO[Unit] = state.get.flatMap(x => IO {
             x shouldBe nToRead
             println(s"x = $x")
           } )
-          assertion
+          Stream.eval(assertion)
         }
       }.compile.drain.unsafeRunSync()
 

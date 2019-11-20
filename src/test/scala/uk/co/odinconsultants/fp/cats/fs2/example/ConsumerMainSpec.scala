@@ -1,5 +1,7 @@
 package uk.co.odinconsultants.fp.cats.fs2.example
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import cats.effect.IO
 import cats.effect.concurrent.Ref
 import org.scalatest.{Matchers, WordSpec}
@@ -15,7 +17,7 @@ class ConsumerMainSpec extends WordSpec with Matchers {
   case class MockCommittableOffset(id: Int)
 
   "Kafka pipeline" should {
-    "Read, write and commit" ignore {
+    "Read, write and commit" in {
       /*
       "StateT is not safe to use with effect types, because it's not safe in the face of concurrent access.
       Instead, consider using a Ref (from either fs2 or cats-effect, depending what version)."
@@ -23,6 +25,7 @@ class ConsumerMainSpec extends WordSpec with Matchers {
        */
       val nToRead = 10
       val nCommitted = Ref[IO].of(1)
+      val nCommittedAtomicInt = new AtomicInteger(0)
 
       val subscribe: MockKafka => IO[Unit] =
         _ => IO {
@@ -33,15 +36,19 @@ class ConsumerMainSpec extends WordSpec with Matchers {
         _ => Stream.emits((1 to nToRead).map(x => MockRecord(x))).covary[IO]
 
       val commitRead: MockRecord => IO[MockProducerRecords] = { r =>
-        val update: IO[Unit] = for {
+        val update: IO[IO[Unit]] = for {
           _ <- IO {  println(s"commiting $r") }
           n <- nCommitted
         } yield {
           n.update(_ + 1)
         }
 
-        update.flatMap { _ =>
-          IO { MockProducerRecords(r.id) }
+        update.flatMap { updateIO: IO[Unit] =>
+          val io = IO { MockProducerRecords(r.id) }
+          println("unsafeRunSync = " + updateIO.unsafeRunSync())
+          nCommittedAtomicInt.incrementAndGet()
+//           (Stream.emit(io))
+          io
         }
       }
 
@@ -64,7 +71,8 @@ class ConsumerMainSpec extends WordSpec with Matchers {
       } yield {
         x
       }
-      result.unsafeRunSync() shouldBe nToRead
+//      result.unsafeRunSync() shouldBe nToRead
+      nCommittedAtomicInt.get shouldBe nToRead
     }
   }
 

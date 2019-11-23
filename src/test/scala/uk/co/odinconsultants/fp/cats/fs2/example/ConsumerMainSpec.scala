@@ -52,12 +52,12 @@ class ConsumerMainSpec extends WordSpec with Matchers {
           MockProducerRecords(r.id)
         })
 
-        val commitWrite: Pipe[IO, MockCommittableOffset, Unit] = _.map(_ => writeState.update(_ + 1))
+        val commitWrite: Pipe[IO, MockCommittableOffset, Int] = s => s.flatMap(c => Stream.eval(writeState.update(_ + 1).flatMap(_ => IO { c.id })))
 
         val x = pipeline(s, subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
 
         x.append {
-          Stream.eval(makeAssertion(nToRead, readState) /*product makeAssertion(nToRead, writeState)*/)
+          Stream.eval(makeAssertion(nToRead, readState) product makeAssertion(nToRead, writeState))
         }
       }.compile.drain.unsafeRunSync()
     }

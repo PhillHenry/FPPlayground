@@ -27,14 +27,15 @@ object ConsumerMain extends IOApp {
    * @tparam P MyProducer (ProducerRecords)
    * @tparam R MyProducerResult (ProducerResult)
    * @tparam O CommittableOffset[IO]
+   * @tparam T final type
    */
-  def pipeline[K, C, P, R, O](s:              Stream[IO, K],
-                              subscribe:      K => IO[Unit],
-                              toRecords:      K => Stream[IO, C],
-                              commitRead:     C => IO[P],
-                              producerPipe:   Pipe[IO, P, R],
-                              toWriteRecords: R => O,
-                              commitWrite:    Pipe[IO, O, Unit]): Stream[IO, Unit] = {
+  def pipeline[K, C, P, R, O, T](s:              Stream[IO, K],
+                                 subscribe:      K => IO[Unit],
+                                 toRecords:      K => Stream[IO, C],
+                                 commitRead:     C => IO[P],
+                                 producerPipe:   Pipe[IO, P, R],
+                                 toWriteRecords: R => O,
+                                 commitWrite:    Pipe[IO, O, T]): Stream[IO, T] = {
     s.evalTap(subscribe).flatMap(toRecords).mapAsync(25)(commitRead).through(producerPipe).map(toWriteRecords).through(commitWrite)
   }
 

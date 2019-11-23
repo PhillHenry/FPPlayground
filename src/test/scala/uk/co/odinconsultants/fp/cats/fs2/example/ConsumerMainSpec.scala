@@ -24,8 +24,8 @@ class ConsumerMainSpec extends WordSpec with Matchers {
       https://stackoverflow.com/questions/51624763/fs2-stream-with-statetio-periodically-dumping-state
        */
       val nToRead = 10
-      val nCommitted = Ref[IO].of(0)
-      val nCommittedAtomicInt = new AtomicInteger(0)
+      val nReadCommitted = Ref[IO].of(0)
+      val nWriteCommitted = Ref[IO].of(0)
 
       val s = Stream.emit(MockKafka()).covary[IO]
 
@@ -43,19 +43,21 @@ class ConsumerMainSpec extends WordSpec with Matchers {
       val toWriteRecords: MockRecord => MockCommittableOffset =
         r => MockCommittableOffset(r.id)
 
-      val commitWrite: Pipe[IO, MockCommittableOffset, Unit] =
-        s => s.map(o => println(s"commitWrite $o"))
+      for {
+        readState   <- Stream.eval(nReadCommitted)
+        writeState  <- Stream.eval(nWriteCommitted)
+      } yield {
 
-      Stream.eval(nCommitted).flatMap { state =>
-        val commitRead: MockRecord => IO[MockProducerRecords] = r => state.update(_ + 1).flatMap( _ => IO { MockProducerRecords(r.id) } )
+        val commitRead: MockRecord => IO[MockProducerRecords] = r => readState.update(_ + 1).flatMap( _ => IO { MockProducerRecords(r.id) } )
+
+//        val commitWrite: Pipe[IO, MockCommittableOffset, Unit] = s => s.map(_ => writeState.update(_ + 1))
+        val commitWrite: Pipe[IO, MockCommittableOffset, Unit] =
+          s => s.map(o => println(s"commitWrite $o"))
 
         val x = pipeline(s, subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
 
         x.append {
-          val assertion: IO[Unit] = state.get.flatMap(x => IO {
-            x shouldBe nToRead
-            println(s"x = $x")
-          } )
+          val assertion: IO[Unit] = makeAssertion(nToRead, readState)
           Stream.eval(assertion)
         }
       }.compile.drain.unsafeRunSync()
@@ -63,4 +65,9 @@ class ConsumerMainSpec extends WordSpec with Matchers {
     }
   }
 
+  private def makeAssertion(expected: Int, state: Ref[IO, Int]): IO[Unit] =
+    state.get.flatMap(x => IO {
+      x shouldBe expected
+      println(s"x = $x")
+    })
 }

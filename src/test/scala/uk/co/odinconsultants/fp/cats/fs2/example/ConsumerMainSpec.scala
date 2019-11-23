@@ -11,10 +11,10 @@ class ConsumerMainSpec extends WordSpec with Matchers {
 
   import ConsumerMain._
 
-  case class MockKafka()
-  case class MockRecord(id: Int)
-  case class MockProducerRecords(id: Int)
-  case class MockCommittableOffset(id: Int)
+  case class Kafka()
+  case class Record(id: Int)
+  case class ProducerRecords(id: Int)
+  case class CommittableOffset(id: Int)
 
   "Kafka pipeline" should {
     "Read, write and commit" in {
@@ -23,36 +23,37 @@ class ConsumerMainSpec extends WordSpec with Matchers {
       Instead, consider using a Ref (from either fs2 or cats-effect, depending what version)."
       https://stackoverflow.com/questions/51624763/fs2-stream-with-statetio-periodically-dumping-state
        */
-      val nToRead = 10
-      val nReadCommitted = Ref[IO].of(0)
+      val nToRead         = 10
+      val nReadCommitted  = Ref[IO].of(0)
       val nWriteCommitted = Ref[IO].of(0)
 
-      val s = Stream.emit(MockKafka()).covary[IO]
+      val s = Stream.emit(Kafka()).covary[IO]
 
-      val subscribe: MockKafka => IO[Unit] =
+      val subscribe: Kafka => IO[Unit] =
         _ => IO {
           println("subscribed")
         }
 
-      val toRecords: MockKafka => Stream[IO, MockRecord] =
-        _ => Stream.emits((1 to nToRead).map(x => MockRecord(x))).covary[IO]
+      val toRecords: Kafka => Stream[IO, Record] =
+        _ => Stream.emits((1 to nToRead).map(x => Record(x))).covary[IO]
 
-      val producerPipe: Pipe[IO, MockProducerRecords, MockRecord] =
-        s => s.map(p => MockRecord(p.id))
+      val producerPipe: Pipe[IO, ProducerRecords, Record] =
+        s => s.map(p => Record(p.id))
 
-      val toWriteRecords: MockRecord => MockCommittableOffset =
-        r => MockCommittableOffset(r.id)
+      val toWriteRecords: Record => CommittableOffset =
+        r => CommittableOffset(r.id)
 
       import cats.implicits._
       Stream.eval {
         nReadCommitted product nWriteCommitted
       }.flatMap { case (readState, writeState) =>
 
-        val commitRead: MockRecord => IO[MockProducerRecords] = r => readState.update(_ + 1).flatMap(_ => IO {
-          MockProducerRecords(r.id)
+        val commitRead: Record => IO[ProducerRecords] = r => readState.update(_ + 1).flatMap(_ => IO {
+          ProducerRecords(r.id)
         })
 
-        val commitWrite: Pipe[IO, MockCommittableOffset, Int] = s => s.flatMap(c => Stream.eval(writeState.update(_ + 1).flatMap(_ => IO { c.id })))
+        // final type (T) is irrelevant but we do need a flatMap
+        val commitWrite: Pipe[IO, CommittableOffset, Int] = s => s.flatMap(c => Stream.eval(writeState.update(_ + 1).flatMap(_ => IO { c.id })))
 
         val x = pipeline(s, subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
 

@@ -43,25 +43,23 @@ class ConsumerMainSpec extends WordSpec with Matchers {
       val toWriteRecords: MockRecord => MockCommittableOffset =
         r => MockCommittableOffset(r.id)
 
-      for {
-        readState   <- Stream.eval(nReadCommitted)
-        writeState  <- Stream.eval(nWriteCommitted)
-      } yield {
+      import cats.implicits._
+      Stream.eval {
+        nReadCommitted product nWriteCommitted
+      }.flatMap { case (readState, writeState) =>
 
-        val commitRead: MockRecord => IO[MockProducerRecords] = r => readState.update(_ + 1).flatMap( _ => IO { MockProducerRecords(r.id) } )
+        val commitRead: MockRecord => IO[MockProducerRecords] = r => readState.update(_ + 1).flatMap(_ => IO {
+          MockProducerRecords(r.id)
+        })
 
-//        val commitWrite: Pipe[IO, MockCommittableOffset, Unit] = s => s.map(_ => writeState.update(_ + 1))
-        val commitWrite: Pipe[IO, MockCommittableOffset, Unit] =
-          s => s.map(o => println(s"commitWrite $o"))
+        val commitWrite: Pipe[IO, MockCommittableOffset, Unit] = _.map(_ => writeState.update(_ + 1))
 
         val x = pipeline(s, subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
 
         x.append {
-          val assertion: IO[Unit] = makeAssertion(nToRead, readState)
-          Stream.eval(assertion)
+          Stream.eval(makeAssertion(nToRead, readState) /*product makeAssertion(nToRead, writeState)*/)
         }
       }.compile.drain.unsafeRunSync()
-
     }
   }
 

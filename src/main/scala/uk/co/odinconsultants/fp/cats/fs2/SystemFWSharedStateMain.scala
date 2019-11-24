@@ -14,7 +14,10 @@ object SystemFWSharedStateMain extends IOApp {
     } yield v
 
     def progUnsugared(c: Ref[IO, Int]): IO[Int] = {
-      c.update(_ + 1).flatMap { _ =>
+      println("c.get = " + c.get)
+      val updated: IO[Unit] = c.update(_ + 1)
+      updated.flatMap { _ =>
+        println("flatMap: c.get = ${c.get}, ")
         c.get
       }
     }

@@ -34,8 +34,10 @@ class ConsumerMainSpec extends WordSpec with Matchers {
           println("subscribed")
         }
 
+      val records = (1 to nToRead).map(x => Record(x))
+
       val toRecords: Kafka => Stream[IO, Record] =
-        _ => Stream.emits((1 to nToRead).map(x => Record(x))).covary[IO]
+        _ => Stream.emits(records).covary[IO]
 
       val producerPipe: Pipe[IO, ProducerRecords, Record] =
         s => s.map(p => Record(p.id))
@@ -58,13 +60,14 @@ class ConsumerMainSpec extends WordSpec with Matchers {
         val x = pipeline(s, subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
 
         x.append {
-          Stream.eval(makeAssertion(nToRead, readState) product makeAssertion(nToRead, writeState))
+          val assertN = makeAssertion(nToRead) _
+          Stream.eval(assertN(readState) *> assertN(writeState))
         }
       }.compile.drain.unsafeRunSync()
     }
   }
 
-  private def makeAssertion(expected: Int, state: Ref[IO, Int]): IO[Unit] =
+  private def makeAssertion(expected: Int)(state: Ref[IO, Int]): IO[Unit] =
     state.get.flatMap(x => IO {
       x shouldBe expected
       println(s"x = $x")

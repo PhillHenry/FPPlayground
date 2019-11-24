@@ -13,7 +13,14 @@ object SystemFWSharedStateMain extends IOApp {
       v <- c.get
     } yield v
 
-    val main = counter.flatMap(c => prog(c))
+    def progUnsugared(c: Ref[IO, Int]): IO[Int] = {
+      c.update(_ + 1).flatMap { _ =>
+        c.get
+      }
+    }
+
+//    val main = counter.flatMap(c => prog(c))
+    val main = counter.flatMap(c => progUnsugared(c))
 
     main.flatMap(x => IO { println(x) } ).map(_ => ExitCode.Success) // "1"
   }

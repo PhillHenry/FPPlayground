@@ -55,14 +55,12 @@ class ConsumerMainSpec extends WordSpec with Matchers {
         })
 
         // final type (T) is irrelevant but we do need a flatMap
-        val commitWrite: Pipe[IO, CommittableOffset, Int] = s => s.flatMap(c => Stream.eval(writeState.update(_ + 1).flatMap(_ => IO { c.id })))
+        val commitWrite: Pipe[IO, CommittableOffset, Unit] = s => s.flatMap(c => Stream.eval(writeState.update(_ + 1)))
 
         val x = pipeline(s, subscribe, toRecords, commitRead, producerPipe, toWriteRecords, commitWrite)
 
-        x.append {
-          val assertN = makeAssertion(nToRead) _
-          Stream.eval(assertN(readState) *> assertN(writeState))
-        }
+        val assertN = makeAssertion(nToRead) _
+        x ++ Stream.eval(assertN(readState) *> assertN(writeState))
       }.compile.drain.unsafeRunSync()
     }
   }

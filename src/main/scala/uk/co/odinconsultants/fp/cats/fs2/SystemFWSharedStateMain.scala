@@ -3,6 +3,9 @@ package uk.co.odinconsultants.fp.cats.fs2
 import cats.effect.concurrent.Ref
 import cats.effect.{ExitCode, IO, IOApp}
 
+/**
+ * From https://www.youtube.com/watch?v=bCcEHRkFfbY
+ */
 object SystemFWSharedStateMain extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
 

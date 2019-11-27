@@ -35,11 +35,13 @@ object sharedstate extends IOApp {
       ref.update(_ ++ List("#3")) *>
       putStrLn("Done #3")
 
-  def masterProcess: IO[Unit] =
-    Ref.of[IO, MyState](List.empty[String]).flatMap { ref =>
+  def masterProcess: IO[Unit] = {
+    val io: IO[Ref[IO, MyState]] = Ref.of[IO, MyState](List.empty[String])
+    io.flatMap { ref: MyStateContainer =>
       val ioa = List(process1(ref), process2(ref), process3(ref)).parSequence.void
       ioa *> ref.get.flatMap(rs => putStrLn(rs.toString))
     }
+  }
 
   override def run(args: List[String]): IO[ExitCode] =
     masterProcess.as(ExitCode.Success)

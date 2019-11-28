@@ -2,10 +2,13 @@ package uk.co.odinconsultants.fp.cats.fs2
 
 import cats.effect._
 import fs2._
+import scala.concurrent.duration._
+import cats.implicits._
 
 /**
   * @see https://underscore.io/blog/posts/2018/03/20/fs2.html
-  *      Note that this uses an old version of the libraries
+  *      Note that this uses an old version of the libraries. Migration notes at
+ *      https://github.com/functional-streams-for-scala/fs2/blob/series/1.0/docs/migration-guide-1.0.md
   */
 object TipsForWorkingWithFS2 extends IOApp {
 
@@ -33,16 +36,15 @@ object TipsForWorkingWithFS2 extends IOApp {
 
     implicit val F = implicitly[ConcurrentEffect[F]]
 
-    val syncIO = F.runCancelable(p) { result =>
-      result match {
-        case Left(_: Throwable) => IO(ExitCode.Error)
-        case Right(_)           => IO(ExitCode.Success)
-      }
-    }
-    val ioCancelable = syncIO.unsafeRunSync() // type is CancelToken[F] which expands to IO[Unit] [PH: no, it appears to be a cats.effect.IO$Suspend]
-    println(s"ioCancelable = $ioCancelable [${ioCancelable.getClass}]")
+//    val times: Stream[Pure, IO[String]] = Stream.emit(IO((System.currentTimeMillis() % 10000).toString)).repeat
+    val times: Stream[Pure, IO[Unit]] = Stream.emit(IO(println(System.currentTimeMillis() % 10000))).repeat
+    val sleeps: Stream[Pure, IO[Unit]] = Stream.emit(Timer[IO].sleep(1.seconds)).repeat
 
-    IO(ExitCode.Success)
+    val streamData: Stream[Pure, IO[Unit]] = times.zip(sleeps).map{ case (a, b) => a *> b }
+
+//    streamData.take(5).compile.drain.unsafeRunSync()
+
+    streamData.take(5).compile.drain.map(_ => IO(ExitCode.Success))
   }
 
 }

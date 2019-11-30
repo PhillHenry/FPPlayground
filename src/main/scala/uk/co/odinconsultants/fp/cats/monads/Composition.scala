@@ -1,6 +1,7 @@
 package uk.co.odinconsultants.fp.cats.monads
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 /**
   * https://stackoverflow.com/questions/33149471/why-do-monads-not-compose-in-scala
@@ -8,14 +9,23 @@ import scala.concurrent.Future
 object Composition extends App {
 
   import scala.concurrent.ExecutionContext.Implicits._
+  import cats.data.OptionT
+  import cats.implicits._
 
   // we also need monadic transformer OptionT which will work only for Option (precisely F[Option[T]])
-  def monadTransformers = {
-    import cats.data.OptionT
-    import cats.implicits._
+  def monadTransformers: OptionT[Future, Int] = {
     val fa = OptionT[Future, Int](Future(Some(1)))
     val fb = OptionT[Future, Int](Future(Some(2)))
-    fa.flatMap(a => fb.map(b => a + b)) //note that a and b are already Int's not Future's
+    val x: OptionT[Future, Int] = fa.flatMap(a => fb.map(b => a + b)) //note that a and b are already Int's not Future's
+
+    val equivalantly: OptionT[Future, Int] = for {
+      a <- fa
+      b <- fb
+    } yield a + b
+
+    println(Await.result(equivalantly.value, 1.seconds))
+
+    x
   }
 
   // Important thing here is that there is no FutureT defined in cats, so you can compose Future[Option[T]], but can't do that with Option[Future[T]] (later I'll show that this problem is even more generic).
@@ -36,6 +46,7 @@ object Composition extends App {
 //    nested.map(_.toString).value
   }
 
-  println(applicative)
+
+  println(Await.result(monadTransformers.value, 1.seconds))
 
 }

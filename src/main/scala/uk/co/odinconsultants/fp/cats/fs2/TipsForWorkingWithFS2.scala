@@ -32,19 +32,22 @@ object TipsForWorkingWithFS2 extends IOApp {
   type F[A] = IO[A]
 
   override def run(args: List[String]): IO[ExitCode] = {
+    printSleepInterleave
+  }
+
+  def printSleepInterleave: IO[ExitCode] = {
     val p: F[Unit] = IO { println("My IO") }
 
     implicit val F = implicitly[ConcurrentEffect[F]]
 
-//    val times: Stream[Pure, IO[String]] = Stream.emit(IO((System.currentTimeMillis() % 10000).toString)).repeat
-    val times: Stream[Pure, IO[Unit]] = Stream.emit(IO(println(System.currentTimeMillis() % 10000))).repeat
-    val sleeps: Stream[Pure, IO[Unit]] = Stream.emit(Timer[IO].sleep(1.seconds)).repeat
+    val printTime = IO(println(System.currentTimeMillis() % 10000))
+    val timesEval: Stream[IO, Unit] = Stream.eval(printTime).repeat
+    val sleep: IO[Unit] = Timer[IO].sleep(1.seconds)
+    val sleepsEval: Stream[IO, Unit] = Stream.eval(sleep).repeat
 
-    val streamData: Stream[Pure, IO[Unit]] = times.zip(sleeps).map{ case (a, b) => a *> b }
+    val streamData: Stream[IO, IO[Unit]] = timesEval.zip(sleepsEval).map{ case (a, b) => p}
 
-//    streamData.take(5).compile.drain.unsafeRunSync()
-
-    streamData.take(5).compile.drain.map(_ => IO(ExitCode.Success))
+    streamData.take(5).compile.drain.map(_ => ExitCode.Success)
   }
 
 }

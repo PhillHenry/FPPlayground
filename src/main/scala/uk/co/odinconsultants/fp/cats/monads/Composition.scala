@@ -1,5 +1,8 @@
 package uk.co.odinconsultants.fp.cats.monads
 
+import cats.Monad
+import cats.effect.IO
+
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
@@ -24,9 +27,18 @@ object Composition extends App {
     } yield a + b
 
     println(Await.result(equivalantly.value, 1.seconds))
+    println(Await.result(transformAndAdd(fa, fb).value, 1.seconds))
+
+    val faIO = OptionT[IO, Int](IO(Some(1)))
+    val fbIO = OptionT[IO, Int](IO(Some(2)))
+    println("faIO, fbIO: " + transformAndAdd(faIO, fbIO))
 
     x
   }
+
+  type MyOptionT[F[_]] = OptionT[F, Int]
+  def transformAndAdd[F[_]: Monad](fa: MyOptionT[F], fb: MyOptionT[F]): MyOptionT[F] =
+    fa.flatMap(a => fb.map(b => a + b))
 
   // Important thing here is that there is no FutureT defined in cats, so you can compose Future[Option[T]], but can't do that with Option[Future[T]] (later I'll show that this problem is even more generic).
   // On the other hand, if you choose composition using Applicative, you'll have to meet only one requirement: both Future and Option should have Applicative instances defined over them

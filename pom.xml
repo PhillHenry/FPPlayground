@@ -129,6 +129,11 @@
       <artifactId>kafka_${scala.compat.version}</artifactId>
       <version>2.3.0</version>
     </dependency>
+    <dependency>
+      <groupId>io.monix</groupId>
+      <artifactId>monix_${scala.compat.version}</artifactId>
+      <version>3.1.0</version>
+    </dependency>
   </dependencies>
 
   <build>

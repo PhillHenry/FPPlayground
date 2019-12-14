@@ -36,9 +36,10 @@ object Composition extends App {
     x
   }
 
-  type MyOptionT[F[_]] = OptionT[F, Int]
-  def transformAndAdd[F[_]: Monad](fa: MyOptionT[F], fb: MyOptionT[F]): MyOptionT[F] =
-    fa.flatMap(a => fb.map(b => a + b))
+  def transformAndAdd[F[_]: Monad](fa: OptionT[F, Int], fb: OptionT[F, Int]): OptionT[F, Int] = for {
+    a <- fa
+    b <- fb
+  } yield a + b
 
   // Important thing here is that there is no FutureT defined in cats, so you can compose Future[Option[T]], but can't do that with Option[Future[T]] (later I'll show that this problem is even more generic).
   // On the other hand, if you choose composition using Applicative, you'll have to meet only one requirement: both Future and Option should have Applicative instances defined over them

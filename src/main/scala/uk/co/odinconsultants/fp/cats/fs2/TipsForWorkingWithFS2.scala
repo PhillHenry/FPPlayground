@@ -2,8 +2,12 @@ package uk.co.odinconsultants.fp.cats.fs2
 
 import cats.effect._
 import fs2._
+
 import scala.concurrent.duration._
 import cats.implicits._
+import fs2.concurrent.Queue
+
+import scala.concurrent.Future
 
 /**
   * @see https://underscore.io/blog/posts/2018/03/20/fs2.html

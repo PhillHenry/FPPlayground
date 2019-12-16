@@ -6,7 +6,10 @@ import cats.effect.IO
 import cats.effect.concurrent.Ref
 import org.scalatest.{Matchers, WordSpec}
 import fs2.{Pipe, Stream}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class ConsumerMainSpec extends WordSpec with Matchers {
 
   import ConsumerMain._

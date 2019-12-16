@@ -1,7 +1,9 @@
 package uk.co.odinconsultants.fp.cats.tupled
 
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
-
+@RunWith(classOf[JUnitRunner])
 class MyTupledSpec extends WordSpec with Matchers {
 
   "Left" should {

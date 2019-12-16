@@ -2,10 +2,13 @@ package uk.co.odinconsultants.fp.cats.fs2
 
 import cats.effect.{ConcurrentEffect, ContextShift, ExitCode, IO}
 import fs2.Stream
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.ExecutionContext
 
+//@RunWith(classOf[JUnitRunner])
 class TipsForWorkingWithFS2Spec extends WordSpec with Matchers {
 
   import TipsForWorkingWithFS2._

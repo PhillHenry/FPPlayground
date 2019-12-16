@@ -3,8 +3,10 @@ package uk.co.odinconsultants.fp.cats.validation
 import cats.{Applicative, ApplicativeError}
 import cats.data.{EitherNel, NonEmptyChain, NonEmptyList, Validated, ValidatedNec}
 import cats.data.Validated.{Invalid, Valid}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
-
+@RunWith(classOf[JUnitRunner])
 class ValidatedAsApplicativeSpec extends WordSpec with Matchers {
 
   trait CreationFixture {

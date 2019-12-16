@@ -1,9 +1,11 @@
 package uk.co.odinconsultants.fp.cats.bifunctor
 
 import cats.data.Validated.{Invalid, Valid}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.fp.cats.validation.{EitherFixture, ValidatedFixture}
-
+@RunWith(classOf[JUnitRunner])
 class MyBifunctorSpec extends WordSpec with Matchers {
 
   import MyBifunctor._

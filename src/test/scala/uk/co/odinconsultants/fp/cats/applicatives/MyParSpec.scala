@@ -1,9 +1,11 @@
 package uk.co.odinconsultants.fp.cats.applicatives
 
 import cats.data.{EitherNec, NonEmptyChain}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.fp.cats.validation.{EitherFixture, ValidatedFixture}
-
+@RunWith(classOf[JUnitRunner])
 class MyParSpec extends WordSpec with Matchers {
 
   import MyPar._

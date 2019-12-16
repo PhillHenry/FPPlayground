@@ -2,8 +2,10 @@ package uk.co.odinconsultants.fp.cats.applicatives
 
 import cats.ApplicativeError
 import cats.data.Validated
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
-
+@RunWith(classOf[JUnitRunner])
 class MyApplicativeErrorsSpec extends WordSpec with Matchers {
 
   trait EitherFixture {

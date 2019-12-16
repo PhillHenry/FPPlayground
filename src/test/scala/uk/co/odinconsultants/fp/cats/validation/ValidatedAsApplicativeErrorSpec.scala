@@ -3,9 +3,11 @@ package uk.co.odinconsultants.fp.cats.validation
 import cats.ApplicativeError
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.{NonEmptyList, Validated}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.fp.cats.applicatives.MyApplicativeErrors
-
+@RunWith(classOf[JUnitRunner])
 class ValidatedAsApplicativeErrorSpec extends WordSpec with Matchers {
 
   "Validated" should {

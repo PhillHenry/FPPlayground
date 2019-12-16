@@ -3,9 +3,11 @@ package uk.co.odinconsultants.fp.cats.applicatives
 import cats.{Applicative, ApplicativeError}
 import cats.data.NonEmptyList
 import cats.data.Validated.Invalid
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.fp.cats.validation.ValidatedFixture
-
+@RunWith(classOf[JUnitRunner])
 class MyProductRSpec extends WordSpec with Matchers {
 
   import MyProductR._

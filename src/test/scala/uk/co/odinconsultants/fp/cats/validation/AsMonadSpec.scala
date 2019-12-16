@@ -1,8 +1,10 @@
 package uk.co.odinconsultants.fp.cats.validation
 
 import cats.data.NonEmptyList
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Matchers, WordSpec}
-
+@RunWith(classOf[JUnitRunner])
 class AsMonadSpec extends WordSpec with Matchers {
 
   "Either" should {

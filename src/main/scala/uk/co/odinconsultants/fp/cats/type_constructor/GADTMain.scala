@@ -37,7 +37,37 @@ object GADTMain {
     }
   }
 
+  type HAlgebra[F[_[_], _], G[_]] = F[G, ?] ~> G
+  def hCata[F[_[_], _], G[_], I](alg: HAlgebra[F, G],hfix: HFix[F, I])(implicit F: HFunctor[F]): G[I] = {
+    val inner = hfix.unfix
+    val nt = F.hmap(
+      new (HFix[F, ?] ~> G) {
+        def apply[A](fa: HFix[F, A]): G[A] = hCata(alg, fa)
+      }
+    )(inner)
+    alg(nt)
+  }
+
+  type JustString[A] = String
+  // important part: convert each layer of query into a string
+  val print: HAlgebra[QueryF, JustString] = new HAlgebra[QueryF, JustString] {
+    override def apply[A](fa: QueryF[JustString, A]): JustString[A] = {
+      fa match {
+        case QueryStringF                 => "as[String]"
+        case QueryBoolF                   => "as[Bool]"
+        case q: QueryPathF[JustString, A] => s"${q.path}.${q.next}"
+      }
+    }
+  }
+
   def main(args: Array[String]): Unit = {
-    println("works")
+    val nestedQuery = queryPath(
+      "oh",
+      queryPath(
+        "my",
+        queryString
+      )
+    )
+    println(hCata(print, nestedQuery))
   }
 }

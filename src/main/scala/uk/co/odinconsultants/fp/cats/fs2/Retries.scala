@@ -1,5 +1,6 @@
 package uk.co.odinconsultants.fp.cats.fs2
 
+import cats.Applicative
 import cats.effect.{ExitCode, IO, IOApp, Timer}
 import fs2.{RaiseThrowable, Stream}
 
@@ -24,7 +25,7 @@ object Retries extends IOApp{
    *                  encountered
    */
   def retry[F[_]: Timer: RaiseThrowable, O](
-                                             fo: F[O],
+                                             fo: F[Seq[O]],
                                              delay: FiniteDuration,
                                              nextDelay: FiniteDuration => FiniteDuration,
                                              maxAttempts: Int,
@@ -35,7 +36,7 @@ object Retries extends IOApp{
     val delays = Stream.unfold(delay)(d => Some(d -> nextDelay(d))).covary[F]
 
     Stream
-      .eval(fo)
+      .evalSeq(fo)
       .attempts(delays)
       .take(maxAttempts)
       .takeThrough(_.fold(err => retriable(err), _ => false))
@@ -45,6 +46,32 @@ object Retries extends IOApp{
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
-    retry(IO { println("hello")}, 1.second, x => 1.second, 10).compile.drain.map(_ => ExitCode.Success)
+    retry(IO { Seq(  new Throwable("Oops!"), println("hello") ) }, 1.second, x => 1.second, 10).compile.drain.map(_ => ExitCode.Success)
   }
+
+  trait State {
+    def running: Boolean
+    def succeeded: Boolean
+  }
+
+  private def startJob: IO[Unit] = ???
+  private def jobState: IO[State] = ???
+
+  private def pollJob[T]: Stream[IO, State] =
+    Stream
+      .fixedDelay(1.minute)
+      .evalMap(_ => jobState)
+      .take(30)
+      .takeThrough(_.running)
+
+  private def checkReuslt(result: State): IO[Unit] =
+    Applicative[IO].whenA(!result.succeeded) {
+      IO.raiseError(new RuntimeException(s"Did not succeed: $result"))
+    }
+
+  def runJob: Stream[IO, Unit] =
+    Stream
+      .eval(startJob)
+      .flatMap(_ => pollJob)
+      .evalMap(checkReuslt)
 }

@@ -11,9 +11,11 @@ object Zipping extends IOApp {
     val nums  = Stream.range[IO](1, 10)
     val chars = Stream.range[IO]('a', 'z' + 1).map(_.toChar)
 
+    println("zipWithHold")
     zipWithHold(nums, chars)
 
-    flatMapOver(nums, chars)
+//    println("flatMapOver")
+//    flatMapOver(nums, chars)
   }
 
   private def flatMapOver(nums: Stream[IO, Int], chars: Stream[IO, Char]) = {

@@ -3,6 +3,7 @@ package uk.co.odinconsultants.fp.cats.fs2
 import cats.implicits._
 import cats.effect.{ExitCode, IO, IOApp}
 import fs2.Stream
+import fs2.concurrent.Signal
 
 import scala.concurrent.duration._
 
@@ -32,17 +33,16 @@ object Zipping extends IOApp {
     val zipped = for {
       a <- nums.noneTerminate.hold(1L.some)
       b <- chars.noneTerminate.hold('\0'.some)
-      c <- {
-        println(s"a = $a [${a.getClass.getSimpleName}]")
-        (a, b).mapN(_ product _)
-          .discrete
-          .unNoneTerminate
-      } // product is actually FlatMap.product
+      c <- combined(a, b)
     } yield c
 
     printOut(zipped)
   }
 
+  private def combined(a: Signal[IO, Option[Long]], b: Signal[IO, Option[Char]]): Stream[IO, (Long, Char)] =
+    (a, b).mapN(_ product _) // product is actually FlatMap.product
+      .discrete
+      .unNoneTerminate
 
   private def printOut[T](zipped: Stream[IO, T]): IO[ExitCode] = {
     zipped.evalTap(el => IO {

@@ -33,6 +33,7 @@ object Zipping extends IOApp {
       a <- nums.noneTerminate.hold(1L.some)
       b <- chars.noneTerminate.hold('\0'.some)
       c <- {
+        println(s"a = $a [${a.getClass.getSimpleName}]")
         (a, b).mapN(_ product _)
           .discrete
           .unNoneTerminate

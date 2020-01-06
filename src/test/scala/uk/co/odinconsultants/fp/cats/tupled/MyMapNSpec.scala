@@ -1,7 +1,8 @@
 package uk.co.odinconsultants.fp.cats.tupled
 
 import org.scalatest.{Matchers, WordSpec}
-import uk.co.odinconsultants.fp.cats.tupled.MyMapN.myMapN
+import uk.co.odinconsultants.fp.cats.tupled.MyMapN._
+import cats.implicits._
 
 class MyMapNSpec extends WordSpec with Matchers {
 

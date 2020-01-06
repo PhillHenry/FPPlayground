@@ -31,7 +31,7 @@ object Zipping extends IOApp {
     val nums  = x.metered(25.millis)
     val chars = y.metered(10.millis)
     val zipped = for {
-      a <- nums.noneTerminate.hold(1L.some)
+      a <- nums.noneTerminate.hold(1.some)
       b <- chars.noneTerminate.hold('\0'.some)
       c <- combined(a, b)
     } yield c
@@ -39,7 +39,7 @@ object Zipping extends IOApp {
     printOut(zipped)
   }
 
-  private def combined(a: Signal[IO, Option[Long]], b: Signal[IO, Option[Char]]): Stream[IO, (Long, Char)] =
+  private def combined(a: Signal[IO, Option[Int]], b: Signal[IO, Option[Char]]): Stream[IO, (Int, Char)] =
     (a, b).mapN(_ product _) // product is actually FlatMap.product
       .discrete
       .unNoneTerminate

@@ -3,12 +3,24 @@ package uk.co.odinconsultants.fp.cats.tupled
 import org.scalatest.{Matchers, WordSpec}
 import uk.co.odinconsultants.fp.cats.tupled.MyMapN._
 import cats.implicits._
+import uk.co.odinconsultants.fp.DataStructures
 
 class MyMapNSpec extends WordSpec with Matchers {
 
   "mapN" should {
-    "act on the internals of a container as a Cartesian product" in {
-      myMapN(List(1, 2, 3), List(10, 11, 12)) shouldBe List(11, 12, 13, 12, 13, 14,13, 14, 15)
+    "act on the internals of a container as a Cartesian product" in new DataStructures {
+      myMapN(oneToThreeInc, tenToTwelveInc) shouldBe List(11, 12, 13, 12, 13, 14, 13, 14, 15)
+    }
+    "ignore surplus elements" in new DataStructures {
+      myMapN(oneToThreeInc, tenToTwelveInc.take(2)) shouldBe List(11, 12, 12, 13, 13, 14)
+    }
+  }
+
+  def toSome(xs: List[Int]): List[Option[Int]] = xs.map(x => Some(x))
+
+  "mapN and product" should {
+    "be both Cartesian and effectful" ignore new DataStructures {
+      mapNAndProduct(toSome(oneToThreeInc), toSome(tenToTwelveInc))
     }
   }
 

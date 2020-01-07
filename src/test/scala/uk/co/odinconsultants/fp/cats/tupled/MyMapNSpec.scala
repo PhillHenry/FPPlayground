@@ -19,7 +19,7 @@ class MyMapNSpec extends WordSpec with Matchers {
   def toSome[T](xs: List[T]): List[Option[T]] = xs.map(x => Some(x))
 
   "mapN and product" should {
-    "be both Cartesian and effectful" in new DataStructures {
+    "produce Cartesian Options of tuples" in new DataStructures {
       mapNAndProduct(toSome(oneToThreeInc), toSome(tenToTwelveInc)) shouldBe toSome(cartesianProduct1to3And10to12)
     }
   }

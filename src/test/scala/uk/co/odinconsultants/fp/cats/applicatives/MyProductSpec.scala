@@ -9,7 +9,7 @@ class MyProductSpec extends WordSpec with Matchers {
   import MyProduct._
 
   "mapN" should {
-    "act on the internals of a container as a Cartesian product" in new DataStructures {
+    "produce a Cartesian product" in new DataStructures {
       myProduct(oneToThreeInc, tenToTwelveInc) shouldBe cartesianProduct1to3And10to12
     }
   }

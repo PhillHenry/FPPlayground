@@ -2,13 +2,19 @@ package uk.co.odinconsultants.fp.cats.fs2.example
 
 import cats.effect.{ConcurrentEffect, ContextShift, IO, Timer}
 import cats.effect.laws.util.TestContext
-import fs2.kafka.{consumerStream, producerStream}
+import fs2.kafka.{ProducerRecord, ProducerRecords, consumerStream, producerStream}
+import fs2.Stream
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.scalatest.WordSpec
 import uk.co.odinconsultants.fp.cats.fs2.example.Settings.{consumerSettings, producerSettings, topicName}
 import cats.implicits._
+import scala.concurrent.duration.{Duration, FiniteDuration, TimeUnit}
+import scala.concurrent.duration._
 
 class EmbeddedKafkaSpec extends WordSpec with EmbeddedKafka {
+
+
+  import SendAndReceiveMain._
 
   "Consumers" should {
     "work with a real Kafka" in {
@@ -18,30 +24,13 @@ class EmbeddedKafkaSpec extends WordSpec with EmbeddedKafka {
       implicit val timer: Timer[IO] = testContext.timer(IO.ioEffect)
 
       withRunningKafka{
-        val cStream = consumerStream[IO]
-          .using(consumerSettings)
-          .evalTap { kafkaConsumer =>
-            println(s"evalTap: kafkaConsumer = $kafkaConsumer")
-            kafkaConsumer.subscribeTo(topicName)
-          }
-          .flatMap { kafkaConsumer =>
-            println(s"flatMap: kafkaConsumer = $kafkaConsumer")
-            kafkaConsumer.partitionedStream
-          }
-          .map { partition => // "a Stream of records for a single topic-partition"
-            println(s"partition = $partition")
-            partition
-              .map { committable =>
-                println(s"committable = $committable")
-              }
-          }
-//        val pStream =
-//          producerStream[IO]
-//            .using(producerSettings)
-//            .flatMap { producer =>
-//              println(s"producer = $producer")
-//              producer.
-//            }
+
+        cStream.compile.toList.unsafeRunAsync(_.fold(x => println("failed"), x => ()))
+        testContext.tick(1 seconds)
+        pStream.compile.toList// .unsafeRunSync() <-- this just hangs
+          .unsafeRunAsync(_.fold(x => println("failed"), x => ()))
+        testContext.tick(1 seconds)
+        Thread.sleep(5000)
       }(EmbeddedKafkaMain.embeddedKafkaConfig)
     }
   }

@@ -21,11 +21,11 @@ object ProducerMain  extends IOApp {
           consumerStream[IO]
             .using(consumerSettings)
             .evalTap { kafkaConsumer =>
-              println(s"kafkaConsumer = $kafkaConsumer")
+              println(s"evalTap: kafkaConsumer = $kafkaConsumer")
               kafkaConsumer.subscribeTo(topicName)
             }
             .flatMap { kafkaConsumer =>
-              println(s"kafkaConsumer = $kafkaConsumer")
+              println(s"flatMap: kafkaConsumer = $kafkaConsumer")
               kafkaConsumer.partitionedStream
             }
             .map { partition => // "a Stream of records for a single topic-partition"

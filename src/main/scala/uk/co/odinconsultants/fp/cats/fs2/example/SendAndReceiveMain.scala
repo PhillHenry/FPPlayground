@@ -9,14 +9,13 @@ import cats.implicits._
 
 object SendAndReceiveMain extends IOApp {
 
-  val pStream: Stream[IO, ProducerResult[String, String, Unit]] =
+  val pStream: Stream[IO, IO[ProducerResult[String, String, Unit]]] =
     producerStream[IO]
       .using(producerSettings)
       .flatMap { producer =>
-//        println(s"producer = $producer")
-        val record    = ProducerRecord(topicName, "key", "value")
+        val record    = ProducerRecord(topicName, "key", new java.util.Date().toString)
         val onRecord  = ProducerRecords.one(record)
-        Stream.eval(producer.produce(onRecord).flatten)
+        Stream.eval(producer.produce(onRecord))
       }
 
   val cStream = kafkaConsumer
@@ -28,7 +27,7 @@ object SendAndReceiveMain extends IOApp {
       println(s"flatMap: kafkaConsumer = $kafkaConsumer")
       kafkaConsumer.partitionedStream
     }
-    .flatMap { partition => // "a Stream of records for a single topic-partition"
+    .flatMap { partition =>
       println(s"partition = $partition")
       partition
         .flatMap { committable =>
@@ -40,6 +39,5 @@ object SendAndReceiveMain extends IOApp {
     val consume: IO[Unit] = cStream.compile.drain
     val produce: IO[Unit] = pStream.compile.drain
     (consume, produce).parMapN((_, _)=> ExitCode.Success)
-//    consume *> produce *> IO(ExitCode.Success)
   }
 }

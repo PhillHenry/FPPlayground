@@ -1,10 +1,13 @@
 package uk.co.odinconsultants.fp.cats.laws
 
 import cats.data.ZipList
+import cats.data.ZipList._
 import cats.implicits._
 import cats.{Applicative, Apply}
 
 /**
+ * Seems like ZipList can't have an Applicative as pure can put anything into its container and ZipList only takes a List
+ *
  * @see https://typelevel.org/cats/typeclasses/parallel.html#nonemptyparallel---a-weakened-parallel
  */
 object ZipListMain /*extends IOApp*/ {
@@ -15,12 +18,13 @@ object ZipListMain /*extends IOApp*/ {
 
     val xs = List(1,2,3,4,5)
 
-    val fa: ZipList[Int] = ZipList(xs)
-    val faMapF = fa.map(f)
-    println(faMapF.value.mkString(","))
+    val zs: ZipList[Int] = ZipList(xs)
+
+//    println(ZipList.catsDataCommutativeApplyForZipList.ap(ZipList(f))(zs).value.mkString(", "))
+//    zs.ap(zs).
 
     compare(xs)
-//    compare(fa) // no Applicative for ZipList
+//    compare(zs) // no Applicative for ZipList
   }
 
   private def compare[T[Int]](xs: T[Int])(implicit F: Applicative[T] with Apply[T]) = {
@@ -29,11 +33,11 @@ object ZipListMain /*extends IOApp*/ {
     println(s"l = $l, r = $r, l == r? ${l == r}")
   }
 
-  def lhs[T[Int]](fa: T[Int])(implicit F: Applicative[T] with Apply[T]): T[Int] = {
+  def lhs[T[Int]](fa: T[Int])(implicit F: Applicative[T]): T[Int] = {
     fa.map(f)
   }
 
   def rhs[T[Int]](fa: T[Int])(implicit F: Applicative[T] with Apply[T]): T[Int] = {
-    F.pure(f).ap(fa)
+    F.pure(f).ap(fa) // pure -> Applicative, ap -> Apply
   }
 }

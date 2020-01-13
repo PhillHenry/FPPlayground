@@ -14,10 +14,10 @@ object MyQueue extends IOApp {
     val q: IO[NoneTerminatedQueue[IO, Work]] = Queue.noneTerminated[IO, Work]
     Stream.eval(q).flatMap { queue =>
       val enqueing: Pipe[IO, Option[Work], Unit] = queue.enqueue
-      val prepare = Stream.eval(workToDo).flatMap(Stream.emits).map(Option(_)).through(enqueing).drain
+      val prepare = Stream.eval(workToDo).flatMap(Stream.emits).map(Option(_)).through(enqueing)
       prepare ++ queue.dequeue.evalMap { work =>
 //        worker.do(work) >> someBusinessStuff.flatTap(maybeTerminateQueue(_))
-        ???
+        IO { println(s"work = $work") }
       }
     }.compile.drain.map(_ => ExitCode.Success)
   }

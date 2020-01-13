@@ -1,19 +1,15 @@
 package uk.co.odinconsultants.fp.cats.fs2.example
 
-import cats.effect.{ConcurrentEffect, ContextShift, IO, Timer}
 import cats.effect.laws.util.TestContext
-import fs2.kafka.{ProducerRecord, ProducerRecords, consumerStream, producerStream}
-import fs2.Stream
-import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
+import cats.effect.{ContextShift, IO, Timer}
+import net.manub.embeddedkafka.EmbeddedKafka
 import org.scalatest.WordSpec
-import uk.co.odinconsultants.fp.cats.fs2.example.Settings.{consumerSettings, producerSettings, topicName}
-import cats.implicits._
-import scala.concurrent.duration.{Duration, FiniteDuration, TimeUnit}
+
 import scala.concurrent.duration._
 
 class EmbeddedKafkaSpec extends WordSpec with EmbeddedKafka {
 
-
+  import ConsumerKafka._
   import ProducerKafka._
 
   "Consumers" should {

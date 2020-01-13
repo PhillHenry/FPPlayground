@@ -51,4 +51,19 @@ object ConsumerKafka {
   def committingBatch(implicit io: ConcurrentEffect[IO], timer: Timer[IO]): BatchPipe =
     fs2.kafka.commitBatchWithin(500, 15.seconds)
 
+  def cStream(io: MyCommittableConsumerRecord => IO[Unit])(implicit ce: ConcurrentEffect[IO], context: ContextShift[IO], timer: Timer[IO]): Stream[IO, Unit]
+    = kafkaConsumer
+      .evalTap (subscribeFn)
+      .flatMap (partitionStreamsFn)
+      .flatMap { partitionStream =>
+        forEachPartition(io, partitionStream)
+      }
+
+  val printMessage: MyCommittableConsumerRecord => IO[Unit] = committable => IO { println(s"committable = ${committable}") }
+
+  val printMessages: Stream[IO, MyCommittableConsumerRecord] => Stream[IO, Unit] = forEachPartition(printMessage, _)
+
+  def forEachPartition[T](io: MyCommittableConsumerRecord => IO[T], s: Stream[IO, MyCommittableConsumerRecord]): Stream[IO, T] =
+    s.flatMap { committable => Stream.eval(io(committable)) }
+
 }

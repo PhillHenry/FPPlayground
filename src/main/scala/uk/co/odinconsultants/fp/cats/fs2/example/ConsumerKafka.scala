@@ -10,9 +10,10 @@ object ConsumerKafka {
 
   import Settings._
 
-  type MyKafkaConsumer  = KafkaConsumer[IO, String, String]
-  type MyProducer       = ProducerRecords[String, String, CommittableOffset[IO]]
-  type MyProducerResult = ProducerResult[String, String, CommittableOffset[IO]]
+  type MyKafkaConsumer              = KafkaConsumer[IO, String, String]
+  type MyProducer                   = ProducerRecords[String, String, CommittableOffset[IO]]
+  type MyProducerResult             = ProducerResult[String, String, CommittableOffset[IO]]
+  type MyCommittableConsumerRecord  = CommittableConsumerRecord[IO, String, String]
 
   type ProducerPipe     = Pipe[IO, MyProducer, MyProducerResult]
   type BatchPipe        = Pipe[IO, CommittableOffset[IO], Unit]
@@ -22,12 +23,14 @@ object ConsumerKafka {
 
   val subscribeFn: MyKafkaConsumer => IO[Unit] = _.subscribeTo(topicName)
 
+  val partitionStreamsFn: KafkaConsumer[IO, String, String] => Stream[IO, Stream[IO, MyCommittableConsumerRecord]] = _.partitionedStream
+
   /**
    * When using stream, records on all assigned partitions end up in the same Stream.
    */
-  val toStreamFn: MyKafkaConsumer => Stream[IO, CommittableConsumerRecord[IO, String, String]] = _.stream
+  val toStreamFn: MyKafkaConsumer => Stream[IO, MyCommittableConsumerRecord] = _.stream
 
-  val commitFn: CommittableConsumerRecord[IO, String, String] => IO[MyProducer] = { committable =>
+  val commitFn: MyCommittableConsumerRecord => IO[MyProducer] = { committable =>
     println(s"committable = $committable")
     val io: IO[(String, String)] = processRecord(committable.record)
     io.map { case (key, value) =>

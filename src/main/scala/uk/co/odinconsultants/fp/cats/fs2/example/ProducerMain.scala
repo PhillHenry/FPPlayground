@@ -3,6 +3,7 @@ package uk.co.odinconsultants.fp.cats.fs2.example
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.functor._
 import fs2.kafka._
+import uk.co.odinconsultants.fp.cats.fs2.example.ConsumerKafka.partitionStreamsFn
 
 /**
  * @see https://ovotech.github.io/fs2-kafka/docs/consumers
@@ -24,10 +25,7 @@ object ProducerMain  extends IOApp {
               println(s"evalTap: kafkaConsumer = $kafkaConsumer")
               kafkaConsumer.subscribeTo(topicName)
             }
-            .flatMap { kafkaConsumer =>
-              println(s"flatMap: kafkaConsumer = $kafkaConsumer")
-              kafkaConsumer.partitionedStream
-            }
+            .flatMap(partitionStreamsFn)
             .map { partition => // "a Stream of records for a single topic-partition"
               println(s"partition = $partition")
               partition

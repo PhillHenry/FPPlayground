@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 class EmbeddedKafkaSpec extends WordSpec with EmbeddedKafka {
 
 
-  import SendAndReceiveMain._
+  import ProducerKafka._
 
   "Consumers" should {
     "work with a real Kafka" in {
@@ -25,7 +25,7 @@ class EmbeddedKafkaSpec extends WordSpec with EmbeddedKafka {
 
       withRunningKafka{
 
-        cStream.compile.toList.unsafeRunAsync(_.fold(x => println("failed"), x => ()))
+        cStream(printMessage).compile.toList.unsafeRunAsync(_.fold(x => println("failed"), x => ()))
         testContext.tick(1 seconds)
         pStream.compile.toList// .unsafeRunSync() <-- this just hangs
           .unsafeRunAsync(_.fold(x => println("failed"), x => ()))

@@ -5,7 +5,7 @@ import fs2.kafka.{AutoOffsetReset, ConsumerSettings, Deserializer, ProducerSetti
 
 object Settings {
 
-  val topicName = "test2"
+  val topicName = "test3"
 
   val port = 9092
 

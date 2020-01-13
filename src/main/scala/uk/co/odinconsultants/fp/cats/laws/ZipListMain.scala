@@ -1,0 +1,39 @@
+package uk.co.odinconsultants.fp.cats.laws
+
+import cats.data.ZipList
+import cats.implicits._
+import cats.{Applicative, Apply}
+
+/**
+ * @see https://typelevel.org/cats/typeclasses/parallel.html#nonemptyparallel---a-weakened-parallel
+ */
+object ZipListMain /*extends IOApp*/ {
+
+  val f: Int => Int = identity _
+
+  def main(args: Array[String]): Unit = {
+
+    val xs = List(1,2,3,4,5)
+
+    val fa: ZipList[Int] = ZipList(xs)
+    val faMapF = fa.map(f)
+    println(faMapF.value.mkString(","))
+
+    compare(xs)
+//    compare(fa) // no Applicative for ZipList
+  }
+
+  private def compare[T[Int]](xs: T[Int])(implicit F: Applicative[T] with Apply[T]) = {
+    val l = lhs(xs)
+    val r = rhs(xs)
+    println(s"l = $l, r = $r, l == r? ${l == r}")
+  }
+
+  def lhs[T[Int]](fa: T[Int])(implicit F: Applicative[T] with Apply[T]): T[Int] = {
+    fa.map(f)
+  }
+
+  def rhs[T[Int]](fa: T[Int])(implicit F: Applicative[T] with Apply[T]): T[Int] = {
+    F.pure(f).ap(fa)
+  }
+}

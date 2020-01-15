@@ -25,11 +25,15 @@ class EventServiceSpec extends WordSpec with Matchers {
 
     "result in an empty queue" in {
 
-      Stream.eval {
-        Topic[IO, Event](Text("Initial Event")) product SignallingRef[IO, Boolean](false)
-      }.flatMap { case (topic, signal) =>
-        val service = new EventService[IO](topic, signal)
-        val concurrentStream = service.startPublisher.concurrently(service.startSubscribers)
+      val topicIO   = Topic[IO, Event](Text("Initial Event"))
+      val signalIO  = SignallingRef[IO, Boolean](false)
+
+      val io: IO[Stream[IO, Unit]] = for {
+        topic   <- topicIO
+        signal  <- signalIO
+      } yield {
+        val service           = new EventService[IO](topic, signal)
+        val concurrentStream  = service.startPublisher.concurrently(service.startSubscribers)
 
         val checkSubscribeSize: Stream[IO, Unit] = topic.subscribeSize(3).flatMap { case (event, count) =>
           println(s"checkSubscribeSize: count = $count, event = $event")
@@ -41,10 +45,18 @@ class EventServiceSpec extends WordSpec with Matchers {
         }
 
         concurrentStream.take(10) ++ checkSubscribeSize
-      }.compile.drain.unsafeRunAsync(_.fold(x => println(s"fail $x"), x => s"success $x"))
-//      }.compile.drain.unsafeRunSync()
+      }
+
+      val f = io.flatMap { s =>
+        s.compile.drain.unsafeToFuture()
+        IO {
+          println("done")
+        }
+      }.unsafeToFuture()
+
       wait("after the whole damn thing")
       wait("and again")
+      assert(testContext.state.lastReportedFailure == None)
     }
   }
 

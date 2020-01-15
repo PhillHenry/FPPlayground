@@ -18,18 +18,17 @@ class EventServiceSpec extends WordSpec with Matchers {
     implicit val cs:          ContextShift[IO]  = testContext.contextShift(IO.ioEffect)
     implicit val timer:       Timer[IO]         = testContext.timer(IO.ioEffect)
 
-    def runTest(assertions: Topic[IO, Event] => Stream[IO, Unit], pivot: Int): Future[Unit] = Stream.eval {
+    def runTest(assertOn: Topic[IO, Event] => Stream[IO, Unit], pivot: Int): Future[Unit] = Stream.eval {
         Topic[IO, Event](Text("Initial Event")) product SignallingRef[IO, Boolean](false)
       }.flatMap { case (topic, signal) =>
         val service = new EventService[IO](topic, signal)
         val s       = service.startPublisher.concurrently(service.startSubscribers)
-        s.take(pivot) ++ assertions(topic) ++ s.drop(pivot)
+        (s.take(pivot) ++ assertOn(topic)) ++ s.drop(pivot)
       }.compile.drain.unsafeToFuture()
 
     def checkSubscribeSize(expected: Int)(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>
-      println(s"checkSubscribeSize: count = $count")
       val check: IO[Unit] = if (count == expected) IO {
-        println(s"count = $count")
+        println(s"got expected count, $count")
       } else {
         println("raising error")
         IO.raiseError(new Throwable(s"count = $count, expected $expected"))
@@ -37,8 +36,7 @@ class EventServiceSpec extends WordSpec with Matchers {
       Stream.eval(check)
     }
 
-    "have 1 subscriber near the beginning" ignore {
-
+    "have 1 subscriber near the beginning" in {
       val f = runTest(checkSubscribeSize(1), 1)
 
       testContext.tick(30 seconds)

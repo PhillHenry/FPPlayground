@@ -23,40 +23,33 @@ class EventServiceSpec extends WordSpec with Matchers {
       testContext.tick(duration)
     }
 
-    "result in an empty queue" in {
+    val expectSuccess: Either[Throwable, Unit] => Unit = { cb =>
+      cb.fold({ x => println(s"fail $x")
+        fail(x)
+      }, x =>"success")
+    }
 
-      val topicIO   = Topic[IO, Event](Text("Initial Event"))
-      val signalIO  = SignallingRef[IO, Boolean](false)
-
-      val io: IO[Stream[IO, Unit]] = for {
-        topic   <- topicIO
-        signal  <- signalIO
-      } yield {
+    def runTest(assertions: Topic[IO, Event] => Stream[IO, Unit], assertAfter: Int): Unit = Stream.eval {
+        Topic[IO, Event](Text("Initial Event")) product SignallingRef[IO, Boolean](false)
+      }.flatMap { case (topic, signal) =>
         val service           = new EventService[IO](topic, signal)
         val concurrentStream  = service.startPublisher.concurrently(service.startSubscribers)
+        concurrentStream.take(assertAfter) ++ assertions(topic) ++ concurrentStream.drop(assertAfter)
+      }.compile.drain.unsafeRunAsync(expectSuccess)
 
-        val checkSubscribeSize: Stream[IO, Unit] = topic.subscribeSize(3).flatMap { case (event, count) =>
-          println(s"checkSubscribeSize: count = $count, event = $event")
-          val check: IO[Unit] = IO {
-            println(s"event => $event, count = $count")
-            count shouldBe 1
-          }
-          Stream.eval(check)
-        }
 
-        concurrentStream.take(10) ++ checkSubscribeSize
+    "result in an empty queue" in {
+      def checkSubscribeSize(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>
+        println(s"checkSubscribeSize: count = $count")
+        val check: IO[Unit] = if (count == 2) IO {
+          println(s"count = $count")
+        } else IO.raiseError(new Throwable(s"count = $count, expected 1"))
+        Stream.eval(check)
       }
 
-      val f = io.flatMap { s =>
-        s.compile.drain.unsafeToFuture()
-        IO {
-          println("done")
-        }
-      }.unsafeToFuture()
+      runTest(checkSubscribeSize _, 1)
 
       wait("after the whole damn thing")
-      wait("and again")
-      assert(testContext.state.lastReportedFailure == None)
     }
   }
 

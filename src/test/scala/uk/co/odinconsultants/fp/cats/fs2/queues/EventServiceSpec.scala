@@ -18,14 +18,13 @@ class EventServiceSpec extends WordSpec with Matchers {
     implicit val cs:          ContextShift[IO]  = testContext.contextShift(IO.ioEffect)
     implicit val timer:       Timer[IO]         = testContext.timer(IO.ioEffect)
 
-    def runTest(assertions: Topic[IO, Event] => Stream[IO, Unit], assertAfter: Int): Future[Unit] = Stream.eval {
+    def runTest(assertions: Topic[IO, Event] => Stream[IO, Unit], pivot: Int): Future[Unit] = Stream.eval {
         Topic[IO, Event](Text("Initial Event")) product SignallingRef[IO, Boolean](false)
       }.flatMap { case (topic, signal) =>
-        val service           = new EventService[IO](topic, signal)
-        val concurrentStream  = service.startPublisher.concurrently(service.startSubscribers)
-        concurrentStream.take(assertAfter) ++ assertions(topic) ++ concurrentStream.drop(assertAfter)
+        val service = new EventService[IO](topic, signal)
+        val s       = service.startPublisher.concurrently(service.startSubscribers)
+        s.take(pivot) ++ assertions(topic) ++ s.drop(pivot)
       }.compile.drain.unsafeToFuture()
-
 
     def checkSubscribeSize(expected: Int)(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>
       println(s"checkSubscribeSize: count = $count")
@@ -42,8 +41,8 @@ class EventServiceSpec extends WordSpec with Matchers {
 
       val f = runTest(checkSubscribeSize(1), 1)
 
-      testContext.tick(2 seconds)
-      Await.result(f, 2 seconds)
+      testContext.tick(30 seconds)
+      Await.result(f, 5 seconds)
       f.isCompleted shouldBe true
       assert(testContext.state.lastReportedFailure == None)
     }

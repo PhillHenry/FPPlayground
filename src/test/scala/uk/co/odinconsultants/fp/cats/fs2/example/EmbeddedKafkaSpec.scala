@@ -15,9 +15,9 @@ class EmbeddedKafkaSpec extends WordSpec with EmbeddedKafka {
   "Consumers" should {
     "work with a real Kafka" in {
 
-      implicit val testContext: TestContext = TestContext()
-      implicit val cs: ContextShift[IO] = testContext.contextShift(IO.ioEffect)
-      implicit val timer: Timer[IO] = testContext.timer(IO.ioEffect)
+      implicit val testContext: TestContext       = TestContext()
+      implicit val cs:          ContextShift[IO]  = testContext.contextShift(IO.ioEffect)
+      implicit val timer:       Timer[IO]         = testContext.timer(IO.ioEffect)
 
       withRunningKafka{
 

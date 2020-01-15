@@ -1,13 +1,19 @@
-package uk.co.odinconsultants.fp.cats.fs2.primitives
+package uk.co.odinconsultants.fp.cats.fs2.queues
+
+import java.util.concurrent.TimeUnit
+
+import cats.effect.{Concurrent, ExitCode, IO, IOApp, Timer}
+import cats.syntax.all._
+import fs2.concurrent.{SignallingRef, Topic}
+import fs2.{Pipe, Stream}
 
 import scala.concurrent.duration._
 import scala.language.higherKinds
-import java.util.concurrent.TimeUnit
-import cats.effect.{Concurrent, ExitCode, IO, IOApp, Timer}
-import cats.syntax.all._
-import fs2.{Pipe, Stream}
-import fs2.concurrent.{SignallingRef, Topic}
 
+
+/**
+ * @see https://fs2.io/concurrency-primitives.html
+ */
 sealed trait Event
 case class Text(value: String) extends Event
 case object Quit extends Event
@@ -49,16 +55,21 @@ class EventService[F[_]](eventsTopic: Topic[F, Event], interrupter: SignallingRe
   }
 }
 
-object PubSub extends IOApp {
+object PubSub {
 
-  val program = for {
-    topic <- Stream.eval(Topic[IO, Event](Text("Initial Event")))
-    signal <- Stream.eval(SignallingRef[IO, Boolean](false))
+  def program(implicit c: Concurrent[IO], t: Timer[IO]): Stream[IO, Unit] = for {
+    topic   <- Stream.eval(Topic[IO, Event](Text("Initial Event")))
+    signal  <- Stream.eval(SignallingRef[IO, Boolean](false))
     service = new EventService[IO](topic, signal)
-    _ <- service.startPublisher.concurrently(service.startSubscribers)
+    _       <- service.startPublisher.concurrently(service.startSubscribers)
   } yield ()
+
+}
+
+object PubSubMain extends IOApp {
+
+  import PubSub._
 
   override def run(args: List[String]): IO[ExitCode] =
     program.compile.drain.as(ExitCode.Success)
 }
-

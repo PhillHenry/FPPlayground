@@ -26,30 +26,17 @@ class EventServiceSpec extends WordSpec with Matchers {
         s.take(pivot) >> assertOn(topic) >> s
       }.compile.drain.unsafeToFuture()
 
-    def checkSubscribeSize(expected: Int)(topic: Topic[IO, Event]): Stream[IO, Unit] = {
-      val events: Stream[IO, Int] = topic.subscribers
-
-      val processEvent: Pipe[IO, Int, Unit] = { t =>
-        println("processEvent")
-         t.flatMap { count =>
-          println(s"count = $count")
-          val check: IO[Unit] = if (count == expected) IO {
-            println(s"got expected count, $count")
-          } else {
-            println("raising error")
-            IO.raiseError(new Throwable(s"count = $count, expected $expected"))
-          }
-          Stream.eval(check)
-        }
+    def checkSubscribeSize(expected: Int)(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>
+      val check: IO[Unit] = if (count == expected) IO {
+        println(s"got expected count, $count")
+      } else {
+        println("raising error")
+        IO.raiseError(new Throwable(s"count = $count, expected $expected"))
       }
-
-      println(s"Streaming through")
-      Stream(
-        events.through(processEvent)
-      ).parJoin(1)
+      Stream.eval(check)
     }
 
-    "have 1 subscriber near the beginning" ignore {
+    "have 1 subscriber near the beginning" in {
       val f = runTest(checkSubscribeSize(1), 1)
 
       testContext.tick(30 seconds)

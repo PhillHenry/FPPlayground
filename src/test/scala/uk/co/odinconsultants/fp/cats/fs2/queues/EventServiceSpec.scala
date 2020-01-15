@@ -6,6 +6,8 @@ import cats.implicits._
 import fs2.Stream
 import fs2.concurrent.{SignallingRef, Topic}
 import org.scalatest.{Matchers, WordSpec}
+
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 class EventServiceSpec extends WordSpec with Matchers {
@@ -16,40 +18,34 @@ class EventServiceSpec extends WordSpec with Matchers {
     implicit val cs:          ContextShift[IO]  = testContext.contextShift(IO.ioEffect)
     implicit val timer:       Timer[IO]         = testContext.timer(IO.ioEffect)
 
-    def wait(msg: String): Unit = {
-      val duration: FiniteDuration = 30 seconds
-      val time = duration.toString
-      println(s"${new java.util.Date()}: Waiting $time for $msg")
-      testContext.tick(duration)
-    }
-
-    val expectSuccess: Either[Throwable, Unit] => Unit = { cb =>
-      cb.fold({ x => println(s"fail $x")
-        fail(x)
-      }, x =>"success")
-    }
-
-    def runTest(assertions: Topic[IO, Event] => Stream[IO, Unit], assertAfter: Int): Unit = Stream.eval {
+    def runTest(assertions: Topic[IO, Event] => Stream[IO, Unit], assertAfter: Int): Future[Unit] = Stream.eval {
         Topic[IO, Event](Text("Initial Event")) product SignallingRef[IO, Boolean](false)
       }.flatMap { case (topic, signal) =>
         val service           = new EventService[IO](topic, signal)
         val concurrentStream  = service.startPublisher.concurrently(service.startSubscribers)
         concurrentStream.take(assertAfter) ++ assertions(topic) ++ concurrentStream.drop(assertAfter)
-      }.compile.drain.unsafeRunAsync(expectSuccess)
+      }.compile.drain.unsafeToFuture()
 
 
-    "result in an empty queue" in {
-      def checkSubscribeSize(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>
-        println(s"checkSubscribeSize: count = $count")
-        val check: IO[Unit] = if (count == 2) IO {
-          println(s"count = $count")
-        } else IO.raiseError(new Throwable(s"count = $count, expected 1"))
-        Stream.eval(check)
+    def checkSubscribeSize(expected: Int)(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>
+      println(s"checkSubscribeSize: count = $count")
+      val check: IO[Unit] = if (count == expected) IO {
+        println(s"count = $count")
+      } else {
+        println("raising error")
+        IO.raiseError(new Throwable(s"count = $count, expected $expected"))
       }
+      Stream.eval(check)
+    }
 
-      runTest(checkSubscribeSize _, 1)
+    "have 1 subscriber near the beginning" ignore {
 
-      wait("after the whole damn thing")
+      val f = runTest(checkSubscribeSize(1), 1)
+
+      testContext.tick(2 seconds)
+      Await.result(f, 2 seconds)
+      f.isCompleted shouldBe true
+      assert(testContext.state.lastReportedFailure == None)
     }
   }
 

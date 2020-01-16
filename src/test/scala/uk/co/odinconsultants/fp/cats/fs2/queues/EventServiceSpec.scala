@@ -23,14 +23,13 @@ class EventServiceSpec extends WordSpec with Matchers {
       }.flatMap { case (topic, signal) =>
         val service = new EventService[IO](topic, signal)
         val s: Stream[IO, Unit]       = service.startPublisher.concurrently(service.startSubscribers)
-        s.take(pivot) >> assertOn(topic) >> s
+        s.take(pivot) ++ assertOn(topic).take(1) ++ s.drop(pivot)
       }.compile.drain.unsafeToFuture()
 
     def checkSubscribeSize(expected: Int)(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>
       val check: IO[Unit] = if (count == expected) IO {
         println(s"got expected count, $count")
       } else {
-        println("raising error")
         IO.raiseError(new Throwable(s"count = $count, expected $expected"))
       }
       Stream.eval(check)

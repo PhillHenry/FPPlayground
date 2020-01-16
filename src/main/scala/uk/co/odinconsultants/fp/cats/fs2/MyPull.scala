@@ -19,10 +19,12 @@ object MyPull extends IOApp {
   }
 
   def ioStreamOfNums(n: Int): Stream[IO, Unit] = {
-    val s = Stream.range(1, n+1).evalMap { x => IO { println(s"x = $x") } }
-    val pivot = n /2
-    val taken = s.take(pivot)
-    val dropped = s.drop(n - pivot)
+    val s           = Stream.range(1, n+1).evalMap { x => IO { println(s"x = $x") } }
+    val pivot       = n /2
+    val resumeFrom = n - pivot
+    println(s"n = $n, pivot = $pivot, resumeFrom = $resumeFrom")
+    val dropped     = s.drop(resumeFrom)
+    val taken       = s.take(pivot)
     taken ++ dropped
   }
 

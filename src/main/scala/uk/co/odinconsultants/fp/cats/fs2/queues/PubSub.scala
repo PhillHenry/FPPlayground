@@ -41,7 +41,7 @@ class EventService[F[_]](eventsTopic: Topic[F, Event], interrupter: SignallingRe
       _.flatMap {
         case e @ Text(_) =>
           Stream.eval(F.delay(println(s"Subscriber #$subscriberNumber processing event: $e")))
-        case Quit => Stream.eval(interrupter.set(true))
+        case Quit => Stream.eval(F.delay{println(s"Quit event for #$subscriberNumber")}) ++ Stream.eval(interrupter.set(true))
       }
 
     val events: Stream[F, Event] =

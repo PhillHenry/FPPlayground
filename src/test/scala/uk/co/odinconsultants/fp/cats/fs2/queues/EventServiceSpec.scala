@@ -13,7 +13,6 @@ import scala.concurrent.duration._
 class EventServiceSpec extends WordSpec with Matchers {
 
   "queue and dequeue" should {
-
     implicit val testContext: TestContext       = TestContext()
     implicit val cs:          ContextShift[IO]  = testContext.contextShift(IO.ioEffect)
     implicit val timer:       Timer[IO]         = testContext.timer(IO.ioEffect)
@@ -23,7 +22,7 @@ class EventServiceSpec extends WordSpec with Matchers {
       }.flatMap { case (topic, signal) =>
         val service = new EventService[IO](topic, signal)
         val s: Stream[IO, Unit]       = service.startPublisher.concurrently(service.startSubscribers)
-        s.take(pivot) ++ assertOn(topic).take(1) ++ s.drop(pivot)
+        s.take(pivot) ++ assertOn(topic) ++ s.drop(pivot)
       }.compile.drain.unsafeToFuture()
 
     def checkSubscribeSize(expected: Int)(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>
@@ -33,12 +32,12 @@ class EventServiceSpec extends WordSpec with Matchers {
         IO.raiseError(new Throwable(s"count = $count, expected $expected"))
       }
       Stream.eval(check)
-    }
+    }.take(1)
 
     "have 1 subscriber near the beginning" in {
       val f = runTest(checkSubscribeSize(1), 1)
 
-      testContext.tick(30 seconds)
+      testContext.tick(60 seconds)
       Await.result(f, 2 seconds)
       f.isCompleted shouldBe true
       assert(testContext.state.lastReportedFailure == None)

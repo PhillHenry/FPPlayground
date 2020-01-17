@@ -26,7 +26,7 @@ class EventServiceSpec extends WordSpec with Matchers {
         val sAssert     = sSubscriber.take(pivot) ++ assertOn(topic) ++ sSubscriber.drop(pivot)
         val s: Stream[IO, Unit]       = sPublisher.concurrently(sAssert)
         s
-      }.compile.drain.unsafeToFuture()
+      }.compile.drain.unsafeToFuture() // " The various run* functions aren’t specialized to IO and work for any F[_] with an implicit Sync[F] — FS2 needs to know how to catch errors that occur during evaluation of F effects, how to suspend computations."  - https://fs2.io/guide.html#statefully-transforming-streams
 
     def checkSubscribeSize(expected: Int)(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>
       val check: IO[Unit] = if (count == expected) IO {
@@ -34,6 +34,7 @@ class EventServiceSpec extends WordSpec with Matchers {
       } else {
         IO.raiseError(new Throwable(s"count = $count, expected $expected"))
       }
+      // "eval produces a stream that evaluates the given effect, then emits the result (notice that F is unconstrained)" - https://fs2.io/guide.html#statefully-transforming-streams
       Stream.eval(check)
     }.take(1)
 

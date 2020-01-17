@@ -12,15 +12,19 @@ class MyPullSpec extends WordSpec with Matchers {
 
     def unsafeRunSyncToList(s: IntStream): List[Int] = s.compile.toList.unsafeRunSync()
 
-    "not effect pure streams" in {
+    s"yield ${expected.mkString(",")} when using pulls" in {
+      unsafeRunSyncToList(pullStreamOfNums(n)) shouldBe expected
+    }
+
+    s"yield ${expected.mkString(",")} for a pure streams" in {
       unsafeRunSyncToList(pureStreamOfNums(n)) shouldBe expected
     }
 
-    "not effect effectful stream" in {
+    s"yield ${expected.mkString(",")} for a stream" in {
       unsafeRunSyncToList(streamOfNums(n)) shouldBe expected
     }
 
-    "not effect IO stream" in {
+    s"yield ${expected.mkString(",")} for IO stream" in {
       unsafeRunSyncToList(ioStreamOfNums(n)) shouldBe expected
     }
   }

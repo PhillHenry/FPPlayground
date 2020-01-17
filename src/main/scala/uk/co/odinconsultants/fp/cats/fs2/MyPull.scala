@@ -41,47 +41,27 @@ object MyPull extends IOApp {
     takeAndDrop(n, s)
   }
 
-  // Taken from https://fs2.io/guide.html#statefully-transforming-streams
   import fs2._
-  def tk[F[_],O](n: Long): Pipe[F,O,O] = {
-    def go(s: Stream[F,O], n: Long): Pull[F,O,Unit] = {
-      s.pull.uncons.flatMap {
-        case Some((hd,tl)) =>
-          hd.size match {
-            case m if m < n => Pull.output(hd) >> go(tl, n - m)
-            case m          => Pull.output(hd.take(n.toInt)) >> Pull.done
-          }
-        case None => Pull.done
-      }
-    }
-    in => go(in,n).stream
-  }
-  def drop[F[_],O](n: Long): Pipe[F,O,O] = {
-    def go(s: Stream[F,O], n: Long): Pull[F,O,Unit] = {
-      s.pull.uncons.flatMap {
-        case Some((hd,tl)) =>
-          hd.size match {
-            case m if m <= n  => go(tl, n - m)
-            case m            => Pull.output(hd.drop(n.toInt)) >> go(tl, 0)
-          }
-        case None => Pull.done
-      }
-    }
-    in => go(in,n).stream
-  }
-
+  // Taken from https://fs2.io/guide.html#statefully-transforming-streams
   def pullStreamOfNums(n: Int): IntStream = {
-    val s = effectfulStream(n)
+    val s     = effectfulStream(n)
     val pivot = n / 2
-    val head = s.through(tk(pivot))
-//    val debug: IO[Int] = IO.delay {
-//      println("spliced here")
-//      -1
-//    }
-//    val debugStream: IntStream = Stream.eval(debug)
+
+    val debug: IO[Int] = IO.delay {
+      println("spliced here")
+      -1
+    }
+    val debugStream: IntStream = Stream.eval(debug)
+
+    // taken from Stream.drop
+    val echoing:  Option[Stream[IO, Int]] => Option[Pull[IO, Int, Unit]]  = _.map(_.pull.echo)
+    val dropping: Option[Stream[IO, Int]] => Pull[IO, Int, Unit]          = o => echoing(o).getOrElse(Pull.done)
+
+    val head  = s.pull.take(pivot).void.stream
+
     head ++
 //      debugStream ++
-        s.through(drop(pivot))
+        s.pull.drop(pivot).flatMap(dropping).stream
   }
 
   override def run(args: List[String]): IO[ExitCode] = {

@@ -62,7 +62,7 @@ object MyPull extends IOApp {
         case Some((hd,tl)) =>
           hd.size match {
             case m if m <= n  => go(tl, n - m)
-            case m            => Pull.output(hd) >> go(tl, 0)
+            case m            => Pull.output(hd.drop(n.toInt)) >> go(tl, 0)
           }
         case None => Pull.done
       }
@@ -74,7 +74,14 @@ object MyPull extends IOApp {
     val s = effectfulStream(n)
     val pivot = n / 2
     val head = s.through(tk(pivot))
-    head ++ s.through(drop(pivot))
+//    val debug: IO[Int] = IO.delay {
+//      println("spliced here")
+//      -1
+//    }
+//    val debugStream: IntStream = Stream.eval(debug)
+    head ++
+//      debugStream ++
+        s.through(drop(pivot))
   }
 
   override def run(args: List[String]): IO[ExitCode] = {

@@ -2,7 +2,6 @@ package uk.co.odinconsultants.fp.cats.fs2
 
 import cats.effect.{ExitCode, IO, IOApp}
 import fs2.{Pure, Stream}
-import cats.implicits._
 
 object MyPull extends IOApp {
 
@@ -42,7 +41,7 @@ object MyPull extends IOApp {
   }
 
   import fs2._
-  // Taken from https://fs2.io/guide.html#statefully-transforming-streams
+  // see https://fs2.io/guide.html#statefully-transforming-streams
   def pullStreamOfNums(n: Int): IntStream = {
     val s     = effectfulStream(n)
     val pivot = n / 2
@@ -53,15 +52,21 @@ object MyPull extends IOApp {
     }
     val debugStream: IntStream = Stream.eval(debug)
 
-    // taken from Stream.drop
-    val echoing:  Option[Stream[IO, Int]] => Option[Pull[IO, Int, Unit]]  = _.map(_.pull.echo)
-    val dropping: Option[Stream[IO, Int]] => Pull[IO, Int, Unit]          = o => echoing(o).getOrElse(Pull.done)
+    type MyPullT[T]   = Pull[IO, T, Unit]
+    type MyPull       = MyPullT[Int]
 
-    val head  = s.pull.take(pivot).void.stream
+    val doEcho:   IntStream         => Pull[IO, Int, Unit]          = _.pull.echo
+    val echoing:  Option[IntStream] => Option[MyPull]               = _.map(doEcho)
+    val toPull:   Option[IntStream] => Pull[IO, Int, Unit]          = o => echoing(o).getOrElse(Pull.done)
+
+    val head: IntStream  = s.pull.take(pivot).void.stream
 
     head ++
+//      Pull.output(s.pull.drop(pivot)).void.stream
 //      debugStream ++
-        s.pull.drop(pivot).flatMap(dropping).stream
+//      s.pull.drop(pivot).void.stream            // List(1,2,3)
+        s.pull.drop(pivot).flatMap(toPull).stream // This is just the code in Stream.drop. Output = List(1,2,3,4,5,6) but also prints out 123123456
+//        s.drop(pivot) // List(1,2,3,4,5,6) but also prints out 123123456
   }
 
   override def run(args: List[String]): IO[ExitCode] = {

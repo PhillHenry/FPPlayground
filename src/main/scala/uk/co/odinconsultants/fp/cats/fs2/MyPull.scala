@@ -62,7 +62,7 @@ object MyPull extends IOApp {
           Pull.pure(None)
         case Some((c, s)) =>
           val acc = if (n == 1) debugStream ++ s else s
-          Pull.suspend((injectIntoStream(acc, n - 1).consChunk(c)).pull.echo)
+          injectIntoStream(acc, n - 1).consChunk(c).pull.echo
       }
 
       s.pull.uncons.flatMap {

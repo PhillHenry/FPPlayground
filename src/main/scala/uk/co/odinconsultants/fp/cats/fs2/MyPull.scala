@@ -51,7 +51,7 @@ object MyPull extends IOApp {
       println("spliced here")
       debugVal
     }
-    val debugStream: IntStream = Stream.eval(debug)
+    val debugStream: IntStream = Stream.eval_(debug)
 
     type ChunkStream  = (Chunk[Int], IntStream)
 
@@ -61,8 +61,11 @@ object MyPull extends IOApp {
         case None =>
           Pull.pure(None)
         case Some((c, s)) =>
+          println(s"c = $c")
           val acc = if (n == 1) debugStream ++ s else s
-          injectIntoStream(acc, n - 1).consChunk(c).pull.echo
+          val x = injectIntoStream(acc, n - 1).consChunk(c).pull
+//          Pull.pure(x.echo) // pure means the IOs are not evaluated
+          x.echo
       }
 
       s.pull.uncons.flatMap {
@@ -70,7 +73,7 @@ object MyPull extends IOApp {
       }.void.stream
     }
 
-    injectIntoStream(s, pivot).filter(_ != debugVal)
+    injectIntoStream(s, pivot)//.filter(_ != debugVal)
   }
 
   override def run(args: List[String]): IO[ExitCode] = {

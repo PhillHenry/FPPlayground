@@ -5,6 +5,9 @@ import fs2.{Chunk, Pull, Stream}
 
 object Splice {
 
+  /**
+   * Not stack safe!
+   */
   def intoStream[T](s: Stream[IO, T], n: Int, debugStream: Stream[IO, T]): Stream[IO, T] = {
 
     val toPull: Option[(Chunk[T], Stream[IO, T])] => Pull[IO, T, Unit] = _ match {

@@ -6,6 +6,7 @@ import cats.implicits._
 import fs2.{Pipe, Stream}
 import fs2.concurrent.{SignallingRef, Topic}
 import org.scalatest.{Matchers, WordSpec}
+import uk.co.odinconsultants.fp.cats.fs2.transforming.Splice
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
@@ -20,12 +21,9 @@ class EventServiceSpec extends WordSpec with Matchers {
     def runTest(assertOn: Topic[IO, Event] => Stream[IO, Unit], pivot: Int): Future[Unit] = Stream.eval {
         Topic[IO, Event](Text("Initial Event")) product SignallingRef[IO, Boolean](false)
       }.flatMap { case (topic, signal) =>
-        val service     = new EventService[IO](topic, signal)
-        val sPublisher  = service.startPublisher
-        val sSubscriber = service.startSubscribers
-        val sAssert     = sSubscriber.take(pivot) ++ assertOn(topic) ++ sSubscriber.drop(pivot)
-        val s: Stream[IO, Unit]       = sPublisher.concurrently(sAssert)
-        s
+        val service             = new EventService[IO](topic, signal)
+        val s: Stream[IO, Unit] = service.startPublisher.concurrently(service.startSubscribers)
+        Splice.intoStream(s, pivot, assertOn(topic))
       }.compile.drain.unsafeToFuture() // " The various run* functions aren’t specialized to IO and work for any F[_] with an implicit Sync[F] — FS2 needs to know how to catch errors that occur during evaluation of F effects, how to suspend computations."  - https://fs2.io/guide.html#statefully-transforming-streams
 
     def checkSubscribeSize(expected: Int)(topic: Topic[IO, Event]): Stream[IO, Unit] = topic.subscribers.flatMap { count =>

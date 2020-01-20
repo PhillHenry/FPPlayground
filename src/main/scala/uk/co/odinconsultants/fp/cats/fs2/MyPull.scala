@@ -2,6 +2,7 @@ package uk.co.odinconsultants.fp.cats.fs2
 
 import cats.effect.{ExitCode, IO, IOApp}
 import fs2.{Pure, Stream}
+import uk.co.odinconsultants.fp.cats.fs2.transforming.Splice
 
 object MyPull extends IOApp {
 
@@ -53,27 +54,7 @@ object MyPull extends IOApp {
     }
     val debugStream: IntStream = Stream.eval_(debug)
 
-    type ChunkStream  = (Chunk[Int], IntStream)
-
-    def injectIntoStream(s: Stream[IO, Int], n: Int): Stream[IO, Int] = {
-
-      val toPull: Option[ChunkStream] => Pull[IO, Int, Unit] = _ match {
-        case None =>
-          Pull.pure(None)
-        case Some((c, s)) =>
-          println(s"c = $c")
-          val acc = if (n == 1) debugStream ++ s else s
-          val x = injectIntoStream(acc, n - 1).consChunk(c).pull
-//          Pull.pure(x.echo) // pure means the IOs are not evaluated
-          x.echo
-      }
-
-      s.pull.uncons.flatMap {
-        toPull
-      }.void.stream
-    }
-
-    injectIntoStream(s, pivot)//.filter(_ != debugVal)
+    Splice.intoStream(s, pivot, debugStream)
   }
 
   override def run(args: List[String]): IO[ExitCode] = {

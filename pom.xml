@@ -21,7 +21,8 @@
     <scala.version>2.12.8</scala.version>
     <scala.compat.version>2.12</scala.compat.version>
     <scalaz.version>7.2.14</scalaz.version>
-    <cats.version>2.0.0</cats.version>
+    <cats.version>2.1.0</cats.version>
+    <cats.version.old>2.0.0</cats.version.old>
   </properties>
 
   <dependencies>
@@ -77,7 +78,7 @@
     <dependency>
       <groupId>org.typelevel</groupId>
       <artifactId>cats-effect-laws_${scala.compat.version}</artifactId>
-      <version>${cats.version}</version>
+      <version>${cats.version.old}</version>
     </dependency>
     <dependency>
       <groupId>org.typelevel</groupId>
@@ -97,7 +98,7 @@
     <dependency>
       <groupId>org.typelevel</groupId>
       <artifactId>cats-effect_${scala.compat.version}</artifactId>
-      <version>${cats.version}</version>
+      <version>${cats.version.old}</version>
     </dependency>
     <dependency>
       <groupId>co.fs2</groupId>

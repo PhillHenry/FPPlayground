@@ -12,4 +12,6 @@ object GroupFunctions {
 
   def groupingAdjacentBy(s: Stream[IO, KV]): Stream[IO, (K, Chunk[KV])] = s.groupAdjacentBy(_._1)
 
+//  def groupingBy(s: Stream[IO, KV]): Stream[IO, (K, Chunk[KV])] = s.groupWithin(_._1)
+
 }

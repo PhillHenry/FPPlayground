@@ -1,11 +1,14 @@
 package uk.co.odinconsultants.fp.cats.fs2.example
 
 import cats.effect.laws.util.TestContext
-import cats.effect.{ContextShift, IO, Timer}
+import cats.effect.{ContextShift, ExitCode, IO, Timer}
 import net.manub.embeddedkafka.EmbeddedKafka
 import org.scalatest.WordSpec
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
+import cats.implicits._
+import fs2.Stream
 
 class EmbeddedKafkaSpec extends WordSpec with EmbeddedKafka {
 
@@ -13,7 +16,7 @@ class EmbeddedKafkaSpec extends WordSpec with EmbeddedKafka {
   import ProducerKafka._
 
   "Consumers" should {
-    "work with a real Kafka" in {
+    "work with a real Kafka" ignore {
 
       implicit val testContext: TestContext       = TestContext()
       implicit val cs:          ContextShift[IO]  = testContext.contextShift(IO.ioEffect)
@@ -21,12 +24,16 @@ class EmbeddedKafkaSpec extends WordSpec with EmbeddedKafka {
 
       withRunningKafka{
 
-        cStream(printMessage).compile.toList.unsafeRunAsync(_.fold(x => println("failed"), x => ()))
+        val io: IO[ExitCode] = SendAndReceiveMain.run(List.empty)
+
         testContext.tick(1 seconds)
-        pStream.compile.toList// .unsafeRunSync() <-- this just hangs
-          .unsafeRunAsync(_.fold(x => println("failed"), x => ()))
+        val f = Stream.eval(io).compile.drain.unsafeToFuture()
+//          .unsafeRunAsync(_.fold(x => println("failed"), x => println(s"producer = $x")))
         testContext.tick(1 seconds)
-        Thread.sleep(5000)
+
+        println("Sleeping...")
+        val results = Await.result(f, 200.seconds)
+        println(s"results = $results")
       }(EmbeddedKafkaMain.embeddedKafkaConfig)
     }
   }

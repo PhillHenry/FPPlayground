@@ -22,7 +22,7 @@ object SuggestionsFromGitter extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     val log:  Int => IO[Unit]     = x => IO { println(s"x = $x") }
     val p:    Pipe[IO, Int, Int]  = track(log, 1.seconds)
-    val s:    Stream[IO, Int]     = Stream.range(0, 10, 1).covary[IO].evalMap(toSleepElement)
+    val s:    Stream[IO, Int]     = Stream.range(0, 10, 1).evalMap(toSleepElement)
     s.through(p).compile.drain.as(ExitCode.Success)
   }
 

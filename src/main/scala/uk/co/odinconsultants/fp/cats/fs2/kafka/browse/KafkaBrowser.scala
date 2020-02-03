@@ -1,9 +1,12 @@
 package uk.co.odinconsultants.fp.cats.fs2.kafka.browse
 
 import cats.effect.{ExitCode, IO, IOApp}
-import fs2.Stream
+import fs2.{INothing, Stream}
 import fs2.kafka.{AutoOffsetReset, ConsumerSettings, _}
+import org.apache.kafka.common.TopicPartition
 import uk.co.odinconsultants.fp.cats.fs2.example.ConsumerKafka.forEachPartition
+
+import scala.collection.immutable.SortedSet
 
 object KafkaBrowser extends IOApp {
 
@@ -11,7 +14,7 @@ object KafkaBrowser extends IOApp {
   type Value                        = String
   type MyKafkaConsumer              = KafkaConsumer[IO, Key, Value]
   type MyCommittableConsumerRecord  = CommittableConsumerRecord[IO, Key, Value]
-  type PartitionStreams             = Stream[IO, Stream[IO, MyCommittableConsumerRecord]]
+  type PartitionStreams             = Stream[IO, MyCommittableConsumerRecord]
 
   val byteDeserializer: Deserializer[IO, String] = Deserializer.lift(bytes => IO.pure(if (bytes == null) "" else new String(bytes.dropWhile(_ == 0))))
 
@@ -29,7 +32,7 @@ object KafkaBrowser extends IOApp {
     val topicName: String = args(2)
     val offset: Long      = args(3).toLong
 
-    readFrom(host, port, topicName, offset).take(3).compile.drain.map(_ => ExitCode.Success)
+    readFrom(host, port, topicName, offset).take(3).compile.toList.map(_ => ExitCode.Success)
   }
 
   private def readFrom(host:      String,
@@ -41,7 +44,7 @@ object KafkaBrowser extends IOApp {
     val subscribeFn: MyKafkaConsumer => IO[Unit] = _.subscribeTo(topicName)
 
 
-    val partitionStreamsFn: MyKafkaConsumer => PartitionStreams = { c =>
+    val partitionStreamsFn: MyKafkaConsumer => Stream[IO, PartitionStreams] = { c =>
       c.partitionedStream
     }
 
@@ -51,9 +54,30 @@ object KafkaBrowser extends IOApp {
       }
     }
 
+    def setSeek(c: MyKafkaConsumer, topics: SortedSet[TopicPartition]): Stream[IO, MyKafkaConsumer] = {
+      val ios: Set[IO[MyKafkaConsumer]] = topics.map { p =>
+        println(s"setting offset")
+        c.seek(p, offset).map(_ => c)
+      }
+      val seed: Stream[IO, MyKafkaConsumer] = Stream.empty.covary[IO]
+      ios.foldLeft(seed) { case (a: Stream[IO, MyKafkaConsumer], c: IO[MyKafkaConsumer]) =>
+        a ++ Stream.eval(c)
+      }
+    }
 
+    def soughtAfter(c: MyKafkaConsumer): Stream[IO, MyKafkaConsumer] = {
+       c.assignmentStream.flatMap { topics =>
+        setSeek(c, topics)
+      }
+    }
 
-    pipeline(consumer, subscribeFn, printOut, partitionStreamsFn)
+    val s: Stream[IO, MyKafkaConsumer] = consumer.evalTap(subscribeFn).flatMap { c =>
+      soughtAfter(c)
+    }
+
+    s.flatMap(partitionStreamsFn).flatMap{ cs =>
+      cs.flatMap(c => Stream.eval(printOut(c)))
+    }
   }
 
   /**
@@ -63,14 +87,12 @@ object KafkaBrowser extends IOApp {
    */
   def pipeline[K, C, P](s:                  Stream[IO, K],
                         subscribe:          K => IO[Unit],
-                        recordAction:       C => IO[P],
+                        forEachPartition:   Stream[IO, C] => Stream[IO, P],
                         partitionStreamsFn: K => Stream[IO, Stream[IO, C]]): Stream[IO, P] = {
-    s.evalTap(subscribe).flatMap(partitionStreamsFn).flatMap { partitionStream =>
-      forEachPartition(recordAction, partitionStream)
-    }
+    s.evalTap(subscribe).flatMap(partitionStreamsFn).flatMap(forEachPartition)
   }
 
 
-  def forEachPartition[T, C](action: C => IO[T], s: Stream[IO, C]): Stream[IO, T] =
+  def forEachPartition[P, C](action: C => IO[P], s: Stream[IO, C]): Stream[IO, P] =
     s.flatMap { c => Stream.eval(action(c)) }
 }

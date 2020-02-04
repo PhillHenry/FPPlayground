@@ -31,8 +31,9 @@ object KafkaBrowser extends IOApp {
     val port: Int         = args(1).toInt
     val topicName: String = args(2)
     val offset: Long      = args(3).toLong
+    val toTake: Int       = args(4).toInt
 
-    readFrom(host, port, topicName, offset).take(3).compile.toList.map(_ => ExitCode.Success)
+    readFrom(host, port, topicName, offset).take(toTake).compile.toList.map(_ => ExitCode.Success)
   }
 
   private def readFrom(host:      String,
@@ -55,14 +56,11 @@ object KafkaBrowser extends IOApp {
     }
 
     def setSeek(c: MyKafkaConsumer, topics: SortedSet[TopicPartition]): Stream[IO, MyKafkaConsumer] = {
-      val ios: Set[IO[MyKafkaConsumer]] = topics.map { p =>
-        println(s"setting offset")
+      val ios: Seq[IO[MyKafkaConsumer]] = topics.toSeq.map { p =>
         c.seek(p, offset).map(_ => c)
       }
-      val seed: Stream[IO, MyKafkaConsumer] = Stream.empty.covary[IO]
-      ios.foldLeft(seed) { case (a: Stream[IO, MyKafkaConsumer], c: IO[MyKafkaConsumer]) =>
-        a ++ Stream.eval(c)
-      }
+      import cats.implicits._
+      Stream.evalSeq(ios.toList.sequence)
     }
 
     def soughtAfter(c: MyKafkaConsumer): Stream[IO, MyKafkaConsumer] = {
@@ -75,24 +73,15 @@ object KafkaBrowser extends IOApp {
       soughtAfter(c)
     }
 
-    s.flatMap(partitionStreamsFn).flatMap{ cs =>
-      cs.flatMap(c => Stream.eval(printOut(c)))
+    val evaluateRecord: MyCommittableConsumerRecord => Stream[IO, Unit] = { c =>
+      Stream.eval(printOut(c))
     }
+
+    val eachPartition: PartitionStreams => Stream[IO, Unit] = { cs =>
+      cs.flatMap(evaluateRecord)
+    }
+
+    s.flatMap(partitionStreamsFn).parJoinUnbounded.flatMap(evaluateRecord)
   }
 
-  /**
-   * @tparam K KafkaConsumer
-   * @tparam C CommittableConsumerRecord
-   * @tparam P Output
-   */
-  def pipeline[K, C, P](s:                  Stream[IO, K],
-                        subscribe:          K => IO[Unit],
-                        forEachPartition:   Stream[IO, C] => Stream[IO, P],
-                        partitionStreamsFn: K => Stream[IO, Stream[IO, C]]): Stream[IO, P] = {
-    s.evalTap(subscribe).flatMap(partitionStreamsFn).flatMap(forEachPartition)
-  }
-
-
-  def forEachPartition[P, C](action: C => IO[P], s: Stream[IO, C]): Stream[IO, P] =
-    s.flatMap { c => Stream.eval(action(c)) }
 }

@@ -18,7 +18,8 @@ object ProducerKafka {
       }
 
   def recordStream(producer: KafkaProducer[IO, String, String]): Stream[IO, PResult] = {
-    val record = ProducerRecord(topicName, "key", new java.util.Date().toString)
+    val date    = new java.util.Date()
+    val record  = ProducerRecord(topicName, s"${date.getTime}key", date.toString)
     val aRecord = ProducerRecords.one(record)
     val result: IO[PResult] = producer.produce(aRecord).flatten
     Stream.eval(result)

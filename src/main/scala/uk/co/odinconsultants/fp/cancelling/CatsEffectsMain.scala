@@ -8,7 +8,7 @@ import cats.implicits._
 
 object CatsEffectsMain extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
-    val workUncancellable: IO[Unit] = (IO.sleep(5.seconds) *>
+    val workUncancellable: IO[Unit] = (IO.sleep(5.seconds) *> // this appears to be the same behaviour as Monix
       IO(println("Halfway")) *>
       IO.sleep(5.seconds) *>
       IO(println("Done"))).uncancelable

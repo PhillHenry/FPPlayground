@@ -135,6 +135,11 @@
       <artifactId>monix_${scala.compat.version}</artifactId>
       <version>3.1.0</version>
     </dependency>
+    <dependency>
+      <groupId>eu.timepit</groupId>
+      <artifactId>refined_2.12</artifactId>
+      <version>0.9.12</version>
+    </dependency>
   </dependencies>
 
   <build>

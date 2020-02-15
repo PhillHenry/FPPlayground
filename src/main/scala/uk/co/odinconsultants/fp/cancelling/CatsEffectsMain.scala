@@ -8,16 +8,15 @@ import cats.implicits._
 
 object CatsEffectsMain extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
-    val workUncancellable: IO[Unit] = (IO.sleep(5.seconds) *> // this appears to be the same behaviour as Monix
+    val ios: IO[Unit] = IO.sleep(5.seconds) *>
       IO(println("Halfway")) *>
       IO.sleep(5.seconds) *>
-      IO(println("Done"))).uncancelable
+      IO(println("Done"))
 
-    val workBracketed = (IO.sleep(5.seconds) *>
-      IO(println("Halfway")) *>
-      IO.sleep(5.seconds) *>
-      IO(println("Done")))
-      .bracket(_ => IO.unit)(_ => IO.unit)
+    // this appears to be the same behaviour as Monix
+    val workUncancellable: IO[Unit] = ios.uncancelable
+
+    val workBracketed = ios.bracket(_ => IO.unit)(_ => IO.unit)
 
     doRace(workUncancellable) *> IO { println("\n\n") } *> doRace(workBracketed) *> ExitCode.Success.pure[IO]
   }

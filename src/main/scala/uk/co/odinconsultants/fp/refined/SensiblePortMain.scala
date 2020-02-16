@@ -17,23 +17,21 @@ import shapeless.{ ::, HNil }
 
 object SensiblePortMain {
 
-  type Port = Greater[W.`0`.T] And Less[W.`65536`.T]
+  type Port =Int Refined Interval.ClosedOpen[W.`0`.T, W.`65536`.T]
 
   def dummyListOn(port: Port): Unit = {
     println(s"Pretending to listen on port $port")
   }
 
-  type RefinedPort = Refined[Int, Port]
-  def dummyListenOn(port: RefinedPort): Unit = {
+  def dummyListenOn(port: Port): Unit = {
     println(s"Pretending to listen on port $port")
   }
 
   def main(args: Array[String]): Unit = {
 //    dummyListOn(0: Port)                                    // this fails to compile as expected
-    val _1: RefinedPort = refineMV[Port](1)
 //    val _0: Refined[Int, Port] = refineMV[Port](0)          // this fails to compile as expected
 //    val _65536: Refined[Int, Port] = refineMV[Port](65536)  // this fails to compile as expected
-    dummyListenOn(_1)
+    dummyListenOn(1: Port)
 //    dummyListenOn(refineMV
 //    dummyListOn(refineMV[Port](1))
 

@@ -10,40 +10,26 @@ import shapeless.Witness.Aux
 
 import scala.reflect.runtime.universe.TypeTag
 
-case class MyMatrix[X, Y](x: X, y: Y)
+case class Matrix[ROWS, COLS](nRows: ROWS, nCols: COLS) {
+  val ROWS =  Witness.mkWitness(nRows)
+  val COLS =  Witness.mkWitness(nCols)
 
-
-
-object MakeMatrix {
-
-  type Index = Int Refined Greater[W.`0`.T]
-
-  type Exactly[T] = Int Refined Equal[T]
-
-  def apply(x: Int, y: Int) = {
-    val X: Aux[Int] =  Witness.mkWitness(x)
-    val Y: Aux[Int] =  Witness.mkWitness(x)
-
-    type ExactlyX = Int Refined Equal[X.T]
-    type ExactlyY = Int Refined Equal[Y.T]
-
-//    val exactlyX: ExactlyX = refineMV[ExactlyX](x)
-//    val exactlyY: ExactlyY = y
-//
-//    val m: MyMatrix[ExactlyY, ExactlyY] = MyMatrix(exactlyX, exactlyY)
-  }
-
-  class MyMatrixWTypes[X <: Exactly[_]: TypeTag, Y <: Exactly[_]] {
+  def multiply[T](x: Matrix[COLS.T, T]): Matrix[ROWS, T] = {
+    println("OK")
+    Matrix(nRows, x.nCols)
   }
 
 }
 
 object MyMatrixMain {
-
-
+  type Exactly[T] = Int Refined Equal[T]
 
   def main(args: Array[String]): Unit = {
-
+    val x: Matrix[Exactly[W.`3`.T], Exactly[W.`7`.T]] = Matrix(3: Exactly[W.`3`.T], 7: Exactly[W.`7`.T])
+    val y = Matrix(7: Exactly[W.`7`.T], 5: Exactly[W.`5`.T])
+    val z = Matrix(13: Exactly[W.`13`.T], 11: Exactly[W.`11`.T])
+    x.multiply(y)
+//    x.multiply(z) // doesn't compile as expected
   }
 
 }

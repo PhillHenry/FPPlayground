@@ -26,10 +26,13 @@ object MyMatrixMain {
 
   def main(args: Array[String]): Unit = {
     val x: Matrix[Exactly[W.`3`.T], Exactly[W.`7`.T]] = Matrix(3: Exactly[W.`3`.T], 7: Exactly[W.`7`.T])
-    val y = Matrix(7: Exactly[W.`7`.T], 5: Exactly[W.`5`.T])
-    val z = Matrix(13: Exactly[W.`13`.T], 11: Exactly[W.`11`.T])
+    val y   = Matrix(7: Exactly[W.`7`.T], 5: Exactly[W.`5`.T])
+    val y2  = Matrix(7, 5)
+    val z   = Matrix(13: Exactly[W.`13`.T], 11: Exactly[W.`11`.T])
     x.multiply(y)
-//    x.multiply(z) // doesn't compile as expected
+//    x.multiply(y2)          // not sure why this doesn't compile but this below:
+    x.multiply(Matrix(7, 5))  // does compile...
+//    x.multiply(z)           // doesn't compile as expected
   }
 
 }

@@ -8,13 +8,14 @@ import eu.timepit.refined.numeric._
 import shapeless.Witness
 import shapeless.Witness.Aux
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.runtime.universe._
 
-case class Matrix[ROWS, COLS](nRows: ROWS, nCols: COLS) {
+case class Matrix[ROWS: TypeTag, COLS](nRows: ROWS, nCols: COLS) {
   val COLS =  Witness.mkWitness(nCols)
+  val targs = typeOf[ROWS]
 
   def multiply[T](x: Matrix[COLS.T, T]): Matrix[ROWS, T] = {
-    println("OK")
+    println(s"OK targs = $targs")
     Matrix(nRows, x.nCols)
   }
 

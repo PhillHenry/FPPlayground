@@ -7,8 +7,10 @@ import eu.timepit.refined.generic.Equal
 import eu.timepit.refined.numeric.{Positive, _}
 import shapeless.Witness
 import shapeless.Witness.Aux
+import uk.co.odinconsultants.fp.refined.RefinedComparisonMain.Exactly
 
 import scala.reflect.runtime.universe._
+import scala.reflect.internal.Types
 
 object RefinedComparisonMain {
 
@@ -28,11 +30,12 @@ object RefinedComparisonMain {
     println(s"targs = ${targs}")
   }
 
-
+  // https://docs.scala-lang.org/overviews/reflection/typetags-manifests.html
   class MyTagCase[X <: Int Refined Equal[Y]: TypeTag, Y: TypeTag] {
     val t = typeOf[X]
     val targs = typeOf[X] match { case TypeRef(_, _, args) => args }
     println(s"targs = $t [ ${t.getClass} ] with args $targs")
+    println(targs(1).erasure)
   }
 
   type Exactly[T] = Int Refined Equal[T]
@@ -59,6 +62,7 @@ object RefinedComparisonMain {
     println(s"${W.`5`.getClass}")
 
     new MyTagCase[Int Refined Equal[W.`5`.T], W.`5`.T]
+//    new MyTagCase2[Int Refined Equal[W.`5`.T]]
   }
 
   // http://tpolecat.github.io/2015/07/30/infer.html
@@ -70,5 +74,6 @@ object RefinedComparisonMain {
 //    def apply[A](a: A)(implicit ev: Exactly[F]): F[A] =
 //      refineMV[Exactly[A]](a)
 //  }
+//  def wrap[F[_]] = new WrapHelper[F]
 
 }

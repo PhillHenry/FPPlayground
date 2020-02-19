@@ -10,14 +10,19 @@ import shapeless.Witness.Aux
 
 import scala.reflect.runtime.universe._
 
-case class Matrix[ROWS: TypeTag, COLS](nRows: ROWS, nCols: COLS) {
-  val COLS =  Witness.mkWitness(nCols)
-  val targs = typeOf[ROWS]
+case class Matrix2[ROWS <: Int Refined Equal[A] forSome { type A <: Int }, COLS  <: Int Refined Equal[A] forSome { type A <: Int }](nRows: ROWS, nCols: COLS) {
 
-  def multiply[T](x: Matrix[COLS.T, T]): Matrix[ROWS, T] = {
-    println(s"OK targs = $targs")
-    Matrix(nRows, x.nCols)
-  }
+  val REQUIRED_COLS =  Witness.mkWitness(nCols)
+
+  def multiply[T <: Int Refined Equal[A] forSome { type A <: Int }](x: Matrix2[REQUIRED_COLS.T, T]): Matrix2[ROWS, T] = Matrix2(nRows, x.nCols)
+
+}
+
+case class Matrix[ROWS, COLS](nRows: ROWS, nCols: COLS) {
+
+  val REQUIRED_COLS =  Witness.mkWitness(nCols)
+
+  def multiply[T](x: Matrix[REQUIRED_COLS.T, T]): Matrix[ROWS, T] = Matrix(nRows, x.nCols)
 
 }
 
@@ -38,6 +43,12 @@ object MyMatrixMain {
     x.multiply(Matrix(7, 5))    // and this too
     x2.multiply(Matrix(7, 5))   //
 //    x.multiply(z)             // doesn't compile as expected
+
+    val _3x7: Matrix2[Exactly[W.`3`.T], Exactly[W.`7`.T]]   = Matrix2(3: Exactly[W.`3`.T], 7: Exactly[W.`7`.T])
+    val _7x8: Matrix2[Exactly[W.`7`.T], Exactly[W.`8`.T]]   = Matrix2(7: Exactly[W.`7`.T], 8: Exactly[W.`8`.T])
+    val _8x7: Matrix2[Exactly[W.`8`.T], Exactly[W.`7`.T]]   = Matrix2(8: Exactly[W.`8`.T], 7: Exactly[W.`7`.T])
+    _3x7.multiply(_7x8)
+//    _3x7.multiply(_8x7) // doesn't compile as expected
   }
 
 }

@@ -13,6 +13,8 @@ import fs2.Stream
  * @retriku fs2 handles only errors which are non-fatal, so you can simplify there already. Apart from that, the two
  * implementations have different behavior in cases where stream succeeds and later starts failing, as you can
  * see with this little test app (wrapWithRetries1 fails with an exception, wrapWithRetries2 doesn't):
+ * So it (also) depends on what you want to achieve. Note that the implementation of wrapWithRetries1 is pretty much
+ * the one of Stream.retry which might be interesting to look at anyway.
  */
 object RetryTestApp extends IOApp {
 

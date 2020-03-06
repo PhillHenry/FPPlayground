@@ -26,6 +26,12 @@
   </properties>
 
   <dependencies>
+    <!-- https://mvnrepository.com/artifact/io.chrisdavenport/log4cats-core -->
+    <dependency>
+      <groupId>io.chrisdavenport</groupId>
+      <artifactId>log4cats-core_${scala.compat.version}</artifactId>
+      <version>1.0.1</version>
+    </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-all</artifactId>

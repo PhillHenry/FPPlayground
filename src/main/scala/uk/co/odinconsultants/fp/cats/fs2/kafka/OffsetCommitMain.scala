@@ -24,19 +24,19 @@ object OffsetCommitMain extends IOApp {
   }
 
 
-//  def doSomething[F[Tuple2]: Applicative: FlatMap: Functor: Logger, K, A](implicit ev: Applicative[Tuple1]) = { // I added the type classes. May very well be wrong.
-//
-//    val stream: Stream[F, CommittableConsumerRecord[F, K, Option[A]]] = ???
-//
-//    val fToState: F ~> StateT[F, CommittableOffsetBatch[F], *] =
-//      StateT.liftK[F, CommittableOffsetBatch[F]]
+  def doSomething[F[_]: Applicative: FlatMap: Functor: Logger, K, A](implicit ev: Applicative[Tuple1]) = { // I added the type classes. May very well be wrong.
+
+    val stream: F[Stream[F, CommittableConsumerRecord[F, K, Option[A]]]] = ???
+
+    val fToState: F ~> StateT[F, CommittableOffsetBatch[F], *] =
+      StateT.liftK[F, CommittableOffsetBatch[F]]
 //
 ////    val stateToF: StateT[F, CommittableOffsetBatch[F], *] ~> F =
 ////      λ[StateT[F, CommittableOffsetBatch[F], *] ~> F](_.run(CommittableOffsetBatch.empty[F]).map(_._2))
 //
-//    Stream
-//      .force(stream)
-//      .translate(fToState)
+    Stream
+      .force(stream) // .force(stream: Stream[F, CommittableConsumerRecord[F, K, Option[A]]])
+      .translate(fToState)
 //      .evalTap(c => StateT.modify[F, CommittableOffsetBatch[F]](_.updated(c.offset)))
 //      .map(_.record.value)
 //      .unNone
@@ -46,5 +46,5 @@ object OffsetCommitMain extends IOApp {
 //        case _                  => Applicative[StateT[F, CommittableOffsetBatch[F], *]].unit
 //      }
 ////      .translate(stateToF)
-//  }
+  }
 }

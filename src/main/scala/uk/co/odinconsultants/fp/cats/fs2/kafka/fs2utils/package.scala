@@ -8,6 +8,12 @@ import scala.concurrent.duration.FiniteDuration
 /**
  * Taken from
  * https://gist.github.com/Daenyth/bcb0b4b8978dc9fa00735f374f5f2d92
+ *
+ * Fabio Labella @SystemFw Mar 06 16:46
+ *  (although do note that the problem there is where to put the bound, general unbounded groupBy is not possible for
+ *  streaming contexts). In your specific case, you also have a potential problem with kafka ordering, you have to do a
+ *  concurrent join, but that can reorder the offset on your topic, and will result in you committing things you are
+ *  not meant to commit
  */
 package object fs2utils {
 

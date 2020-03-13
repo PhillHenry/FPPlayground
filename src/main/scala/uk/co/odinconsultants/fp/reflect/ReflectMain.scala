@@ -30,16 +30,18 @@ object ReflectMain {
     ctX
   }
 
+  val w3 = Witness(3)
+  type _3 = w3.T
+
   def main(args: Array[String]): Unit = {
     println("ClassTags:")
     classTagOf[List[Int]] // List
     println("\n\nTypeTags:")
     typeTagOf[List[Int]] // Int
 
-    println("Refined:")
-    val w3 = Witness(3)
-    type _3 = w3.T
-//    typeTagOf[List[_3]] // No TypeTag available for List[_3]
+    println("\nRefined:")
+
+    typeTagOf[List[_3]] // "No TypeTag available for List[_3]" if _3 is scoped to the fucntion
   }
 
 }

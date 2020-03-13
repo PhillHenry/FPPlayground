@@ -23,7 +23,7 @@ object OffsetCommitMain extends IOApp {
     IO(ExitCode.Success)
   }
 
-  def doSomething[F[_]: Applicative: FlatMap: Functor: Logger, K, A] = { // I added the type classes. May very well be wrong.
+  def doSomething[F[_]: Applicative: FlatMap: Functor: Logger, K, A](implicit ev: StateT[F, CommittableOffsetBatch[F], _]) = { // I added the type classes. May very well be wrong.
 
     val stream: F[Stream[F, CommittableConsumerRecord[F, K, Option[A]]]] = ???
 

@@ -10,11 +10,11 @@ import shapeless.Witness.Aux
 
 import scala.reflect.runtime.universe._
 
-case class Matrix2[ROWS <: Int Refined Equal[A] forSome { type A <: Int }, COLS  <: Int Refined Equal[A] forSome { type A <: Int }](nRows: ROWS, nCols: COLS) {
+case class Matrix2[ROWS <: ExactInt, COLS  <: ExactInt](nRows: ROWS, nCols: COLS) {
 
   val REQUIRED_COLS =  Witness.mkWitness(nCols)
 
-  def multiply[T <: Int Refined Equal[A] forSome { type A <: Int }](x: Matrix2[REQUIRED_COLS.T, T]): Matrix2[ROWS, T] = Matrix2(nRows, x.nCols)
+  def multiply[T <: ExactInt](x: Matrix2[REQUIRED_COLS.T, T]): Matrix2[ROWS, T] = Matrix2(nRows, x.nCols)
 
 }
 

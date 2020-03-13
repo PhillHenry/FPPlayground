@@ -1,5 +1,7 @@
 package uk.co.odinconsultants.fp.reflect
 
+import shapeless.Witness
+
 import scala.reflect.ClassTag
 import scala.reflect._
 import scala.reflect.runtime.universe
@@ -33,6 +35,11 @@ object ReflectMain {
     classTagOf[List[Int]] // List
     println("\n\nTypeTags:")
     typeTagOf[List[Int]] // Int
+
+    println("Refined:")
+    val w3 = Witness(3)
+    type _3 = w3.T
+//    typeTagOf[List[_3]] // No TypeTag available for List[_3]
   }
 
 }

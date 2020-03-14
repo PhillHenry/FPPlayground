@@ -32,10 +32,10 @@ class GroupingSpec extends WordSpec with Matchers {
         zs
       }
       val xs = flatten(mapped)
-
-      val data = Await.result(s.take(55).compile.toList.unsafeToFuture(), 1 second)
-      println(s"data:\n${data.mkString("\n")}")
-      data should have length 55
+      xs.foldLeft(0){ case (acc, x) => acc + x.size } shouldBe 55
+      xs.foreach { ds =>
+        ds.length shouldBe ds.head.id
+      }
     }
   }
 

@@ -4,7 +4,9 @@ import cats.effect.{ConcurrentEffect, ContextShift, IO, Timer}
 import cats.effect.laws.util.TestContext
 import org.scalatest.{Matchers, WordSpec}
 import fs2.Stream
+import cats.implicits._
 
+import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.Await
 
@@ -21,10 +23,8 @@ class GroupingSpec extends WordSpec with Matchers {
 
   def datumFor(i: Int): MyDatum = MyDatum(i, i.toString)
 
-  val noisyErrorHandler: Throwable => IO[Unit] = { t =>
-    t.printStackTrace()
-    IO.unit
-  }
+  type Compiled = List[(Int, Stream[IO, MyDatum])]
+  def compile(s: Stream[IO, MyDatum]): IO[List[MyDatum]] = s.compile.toList
 
   "unbounded groupBy" should {
     val s = (2 to 10).foldLeft(Stream.emit(datumFor(1))) { case (acc, i) =>
@@ -33,16 +33,19 @@ class GroupingSpec extends WordSpec with Matchers {
       )
     }
 
-    "lead to streams for each key (?)" ignore {
+    "lead to streams for each key (?)" in {
       val pipe    = groupByUnbounded(selector)
       val result  = pipe(s)
 
-      val io: IO[List[(Int, Stream[IO, MyDatum])]] = result.take(55).compile.toList
-      val mapped = io.map { xs =>
+      val io: IO[Compiled] = result.take(55).compile.toList
+      val mapped = io.flatMap { case xs: Compiled =>
         println(s"xs = $xs")
-        xs should have length 10
+        val ios: List[IO[List[MyDatum]]] = xs.map(_._2.compile.toList).toList
+        val zs: IO[List[List[MyDatum]]] = ios.sequence
+        zs
       }
-      Await.result(mapped.unsafeToFuture(), 1 second)
+      val xs: List[List[MyDatum]] = Await.result(mapped.unsafeToFuture(), 1 second)
+      xs.foreach(x => println(s"${x.mkString(", ")}"))
     }
   }
 

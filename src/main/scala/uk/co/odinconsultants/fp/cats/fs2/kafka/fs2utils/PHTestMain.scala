@@ -19,7 +19,7 @@ object PHTestMain extends IOApp {
   }).repeatN(n)
 
   val s = (2 to 10).foldLeft(streamFor(1)) { case (acc, i) =>
-    acc.interleave(
+    acc.interleaveAll(
       streamFor(i)
     )
   }

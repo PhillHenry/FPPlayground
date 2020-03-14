@@ -31,19 +31,18 @@ class GroupingSpec extends WordSpec with Matchers {
         val zs: IO[List[List[MyDatum]]] = ios.sequence
         zs
       }
-      printFlattened(mapped)
+      val xs = flatten(mapped)
 
-      val xs = s.take(55).compile.toList.unsafeToFuture()
-      testContext.tickOne()
-      val data = Await.result(xs, 1 second)
+      val data = Await.result(s.take(55).compile.toList.unsafeToFuture(), 1 second)
       println(s"data:\n${data.mkString("\n")}")
       data should have length 55
     }
   }
 
 
-  private def printFlattened(mapped: IO[List[List[MyDatum]]]) = {
+  private def flatten(mapped: IO[List[List[MyDatum]]]): List[List[MyDatum]] = {
     val xs: List[List[MyDatum]] = Await.result(mapped.unsafeToFuture(), 1 second)
     xs.foreach(x => println(s"${x.mkString(", ")}"))
+    xs
   }
 }

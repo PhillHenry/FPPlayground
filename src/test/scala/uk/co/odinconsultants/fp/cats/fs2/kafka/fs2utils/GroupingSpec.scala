@@ -22,14 +22,18 @@ class GroupingSpec extends WordSpec with Matchers {
   implicit val F                              = implicitly[ConcurrentEffect[IO]]
 
   def datumFor(i: Int): MyDatum = MyDatum(i, i.toString)
+  def streamFor(n: Int): Stream[IO, MyDatum] = Stream.eval(IO {
+    println(s"n = $n")
+    datumFor(n)
+  }).repeatN(n)
 
   type Compiled = List[(Int, Stream[IO, MyDatum])]
   def compile(s: Stream[IO, MyDatum]): IO[List[MyDatum]] = s.compile.toList
 
   "unbounded groupBy" should {
-    val s = (2 to 10).foldLeft(Stream.emit(datumFor(1))) { case (acc, i) =>
+    val s = (2 to 10).foldLeft(streamFor(1)) { case (acc, i) =>
       acc.interleave(
-        Stream.emit(datumFor(i)).repeatN(i)
+        streamFor(i)
       )
     }
 
@@ -37,7 +41,8 @@ class GroupingSpec extends WordSpec with Matchers {
       val pipe    = groupByUnbounded(selector)
       val result  = pipe(s)
 
-      val io: IO[Compiled] = result.take(55).compile.toList
+      testContext.tick(1 second)
+      val io: IO[Compiled] = result.compile.toList
       val mapped = io.flatMap { case xs: Compiled =>
         println(s"xs = $xs")
         val ios: List[IO[List[MyDatum]]] = xs.map(_._2.compile.toList).toList

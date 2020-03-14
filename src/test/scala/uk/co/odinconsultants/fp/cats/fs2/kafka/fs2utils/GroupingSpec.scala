@@ -1,14 +1,12 @@
 package uk.co.odinconsultants.fp.cats.fs2.kafka.fs2utils
 
-import cats.effect.{ConcurrentEffect, ContextShift, IO, Timer}
 import cats.effect.laws.util.TestContext
-import org.scalatest.{Matchers, WordSpec}
-import fs2.Stream
+import cats.effect.{ConcurrentEffect, ContextShift, IO}
 import cats.implicits._
+import org.scalatest.{Matchers, WordSpec}
 
-import scala.collection.immutable
-import scala.concurrent.duration._
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class GroupingSpec extends WordSpec with Matchers {
 
@@ -23,12 +21,10 @@ class GroupingSpec extends WordSpec with Matchers {
       val pipe    = groupByUnbounded(selector)
       val result  = pipe(s)
 
-      testContext.tick(1 second)
-      val io: IO[List[(Int, Stream[IO, MyDatum])]] = result.compile.toList
-      val mapped: IO[List[List[MyDatum]]] = io.flatMap { case xs =>
-        println(s"xs = $xs")
-        val ios: List[IO[List[MyDatum]]] = xs.map(_._2.compile.toList).toList
-        val zs: IO[List[List[MyDatum]]] = ios.sequence
+      val ioList = result.compile.toList
+      val mapped: IO[Flattened] = ioList.flatMap { case xs =>
+        val ios: List[IO[List[MyDatum]]] = xs.map(_._2.compile.toList)
+        val zs: IO[Flattened] = ios.sequence
         zs
       }
       val xs = flatten(mapped)
@@ -39,9 +35,10 @@ class GroupingSpec extends WordSpec with Matchers {
     }
   }
 
+  type Flattened = List[List[MyDatum]]
 
-  private def flatten(mapped: IO[List[List[MyDatum]]]): List[List[MyDatum]] = {
-    val xs: List[List[MyDatum]] = Await.result(mapped.unsafeToFuture(), 1 second)
+  private def flatten(mapped: IO[Flattened]): List[List[MyDatum]] = {
+    val xs: Flattened = Await.result(mapped.unsafeToFuture(), 1 second)
     xs.foreach(x => println(s"${x.mkString(", ")}"))
     xs
   }

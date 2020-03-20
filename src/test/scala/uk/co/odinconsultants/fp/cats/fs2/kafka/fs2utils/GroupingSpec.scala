@@ -23,6 +23,10 @@ class GroupingSpec extends WordSpec with Matchers {
 
       val ioList = result.compile.toList
       val mapped: IO[Flattened] = ioList.flatMap { case xs =>
+        /*
+        Michael Pilquist @mpilquist 15:04  The toList method is added as an extension method in the case where F[_] = Pure
+        [Otherwise, you have to use compile]
+         */
         val ios: List[IO[List[MyDatum]]] = xs.map(_._2.compile.toList)
         val zs: IO[Flattened] = ios.sequence
         zs

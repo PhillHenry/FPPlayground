@@ -23,6 +23,7 @@
     <scalaz.version>7.2.14</scalaz.version>
     <cats.version>2.1.0</cats.version>
     <cats.version.old>2.0.0</cats.version.old>
+    <zio.version>1.0.0-RC18-2</zio.version>
   </properties>
 
   <dependencies>
@@ -75,6 +76,16 @@
       <groupId>org.scalaz</groupId>
       <artifactId>scalaz-zio_${scala.compat.version}</artifactId>
       <version>0.5.3</version>
+    </dependency>
+    <dependency>
+      <groupId>dev.zio</groupId>
+      <artifactId>zio-test_${scala.compat.version}</artifactId>
+      <version>${zio.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>dev.zio</groupId>
+      <artifactId>zio_${scala.compat.version}</artifactId>
+      <version>${zio.version}</version>
     </dependency>
     <dependency>
       <groupId>org.typelevel</groupId>

@@ -9,8 +9,6 @@ import zio.test.TestAspect._
 
 object ZioSpec extends DefaultRunnableSpec {
 
-  val unhappyEitherPath: Either[Throwable, String] = Left(new Exception("The unhappy path"))
-
   override def spec: ZSpec[TestEnvironment, Any] = suite("Me playing around with ZIO test")(
     testM("Problem I faced that is documented at http://javaagile.blogspot.com/2015/03/interesting-syntax-but-does-it-makes.html"){
       val result:   Option[String]            = None
@@ -26,7 +24,7 @@ object ZioSpec extends DefaultRunnableSpec {
     }
       ,
     testM("Problem I faced that is documented at http://javaagile.blogspot.com/2015/03/interesting-syntax-but-does-it-makes.html"){
-      val result:   Either[Throwable, String]       = unhappyEitherPath
+      val result:   Either[Throwable, String]       = Left(new Exception("The unhappy path"))
       val asserted: Either[Throwable, TestResult]   = result.map(x => assert(x)(equalTo("this is naive as it assumes happy path")))
       val myZio:    ZIO[Any, Throwable, TestResult] = ZIO.fromEither(asserted)
       myZio

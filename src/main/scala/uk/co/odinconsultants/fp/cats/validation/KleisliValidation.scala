@@ -30,22 +30,22 @@ checkAllThings
 object KleisliValidation extends IOApp {
 
   case class FailureReason(someInt: Int, reason: String)
-  case class DomainThingy(someStr: Int)
-  case class TransactionEvent(someStr: String, someInt: Int)
+  case class TransactionEvent(txStr: String, txInt: Int)
 
-//  def intToKleisli(x: Int): Option[Int, FailureReason] =
-
-  val checkFirstThing:  Kleisli[Option,  Int,    FailureReason]           = Kleisli(x => Some(FailureReason(x, "default reason")))
-  val checkSecondThing: Kleisli[Option, String, FailureReason]            = Kleisli(x => Some(FailureReason(-1, x)))
+  val checkInt:     Kleisli[Option, Int,    FailureReason] = Kleisli(x => Some(FailureReason(x, "default reason")))
+  val checkString:  Kleisli[Option, String, FailureReason] = Kleisli(x => Some(FailureReason(-1, x)))
 
   val checkAllThings:   Kleisli[Option, TransactionEvent, FailureReason]  =
     NonEmptyList.of[Kleisli[Option, TransactionEvent, FailureReason]](
-      checkFirstThing.local(_.someInt),
-      checkSecondThing.local(_.someStr)
-    )
-      .reduceLeft(_ <+> _)
+      checkString .local(_.txStr),
+      checkInt    .local(_.txInt)
+  ).reduceLeft(_ <+> _)
 
   override def run(args: List[String]): IO[ExitCode] = {
-    IO(println(checkAllThings)).as(ExitCode.Success)
+//    println(checkFirstThing(1)) // Some(FailureReason(1,default reason))
+
+    val txEvent = TransactionEvent("a tx event", 42)
+    println(checkAllThings(txEvent))
+    IO(ExitCode.Success)
   }
 }

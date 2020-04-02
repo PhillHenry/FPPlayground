@@ -35,17 +35,21 @@ object KleisliValidation extends IOApp {
   val checkInt:     Kleisli[Option, Int,    FailureReason] = Kleisli(x => Some(FailureReason(x, "default reason")))
   val checkString:  Kleisli[Option, String, FailureReason] = Kleisli(x => Some(FailureReason(-1, x)))
 
+  val checkStrLocal: Kleisli[Option, TransactionEvent, FailureReason] = checkString.local(_.txStr)
+  val checkIntLocal: Kleisli[Option, TransactionEvent, FailureReason] = checkInt.local(_.txInt)
+
   val checkAllThings:   Kleisli[Option, TransactionEvent, FailureReason]  =
     NonEmptyList.of[Kleisli[Option, TransactionEvent, FailureReason]](
-      checkString .local(_.txStr),
-      checkInt    .local(_.txInt)
+      checkStrLocal,
+      checkIntLocal
   ).reduceLeft(_ <+> _)
 
   override def run(args: List[String]): IO[ExitCode] = {
-//    println(checkFirstThing(1)) // Some(FailureReason(1,default reason))
+    println(checkInt(1)) // Some(FailureReason(1,default reason))
 
     val txEvent = TransactionEvent("a tx event", 42)
-    println(checkAllThings(txEvent))
+    println(checkAllThings(txEvent)) // Some(FailureReason(-1,a tx event))
+
     IO(ExitCode.Success)
   }
 }

@@ -21,17 +21,17 @@ object Composition extends App {
     val fb = OptionT[Future, Int](Future(Some(2)))
     val x: OptionT[Future, Int] = fa.flatMap(a => fb.map(b => a + b)) //note that a and b are already Int's not Future's
 
-    val equivalantly: OptionT[Future, Int] = for {
+    val equivalently: OptionT[Future, Int] = for {
       a <- fa
       b <- fb
     } yield a + b
 
-    println(Await.result(equivalantly.value, 1.seconds))
+    println(Await.result(equivalently.value, 1.seconds))
     println(Await.result(transformAndAdd(fa, fb).value, 1.seconds))
 
     val faIO = OptionT[IO, Int](IO(Some(1)))
     val fbIO = OptionT[IO, Int](IO(Some(2)))
-    println("faIO, fbIO: " + transformAndAdd(faIO, fbIO))
+    println("faIO, fbIO: " + transformAndAdd(faIO, fbIO).value.unsafeRunSync())
 
     x
   }

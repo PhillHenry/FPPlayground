@@ -6,18 +6,19 @@ import zio.{IO, UIO, ZIO}
 /**
  * Deliberately avoiding the excellent ZIO testing framework to see what ZIO's doing under the covers.
  */
-class ApplicativeSpec extends WordSpec with Matchers {
+class MonadicShortCircuitSpec extends WordSpec with Matchers {
 
-  "Applicatives" should {
-    val nay: IO[Int, Nothing] = ZIO.fail {
-      println("fail")
-      -1
-    }
-    val aye: UIO[Int]         = ZIO.succeed {
-      println("success")
-      1
-    }
-    val zioRuntime: zio.Runtime[zio.ZEnv] = zio.Runtime.default
+  val nay: IO[Int, Nothing] = ZIO.fail {
+    println("fail")
+    -1
+  }
+  val aye: UIO[Int]         = ZIO.succeed {
+    println("success")
+    1
+  }
+  val zioRuntime: zio.Runtime[zio.ZEnv] = zio.Runtime.default
+
+  "Monads" should {
     "yield failure if (success x failure)" in {
       val result: ZIO[Any, Int, Nothing] = for {
         actual    <- aye *> nay

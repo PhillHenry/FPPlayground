@@ -6,7 +6,7 @@ import zio.{IO, UIO, ZIO}
 /**
  * Deliberately avoiding the excellent ZIO testing framework to see what ZIO's doing under the covers.
  */
-class MonadicShortCircuitSpec extends WordSpec with Matchers {
+class ShortCircuitSpec extends WordSpec with Matchers {
 
   val nay: IO[Int, Nothing] = ZIO.fail {
     println("fail")
@@ -17,6 +17,21 @@ class MonadicShortCircuitSpec extends WordSpec with Matchers {
     1
   }
   val zioRuntime: zio.Runtime[zio.ZEnv] = zio.Runtime.default
+
+  "Using collectAll" should {
+    "not short-circuit" in {
+      // see https://github.com/zio/zio/issues/783 - collectAll => sequence in Cats land
+      val sequenced: IO[Int, List[Int]] = IO.collectAll(List(aye, nay, aye))
+      val result = for {
+        xs <- sequenced
+      } yield {
+        println(s"xs = ${xs.mkString(", ")}")
+        xs shouldBe List(1, -1, 1)
+      }
+      zioRuntime.unsafeRunSync(result)
+    }
+  }
+
 
   "Monads" should {
     "yield failure if (success x failure)" in {

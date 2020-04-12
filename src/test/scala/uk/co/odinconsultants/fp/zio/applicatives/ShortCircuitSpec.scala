@@ -21,14 +21,6 @@ class ShortCircuitSpec extends WordSpec with Matchers {
   "Using collectAll" should {
     "not short-circuit" in {
       // see https://github.com/zio/zio/issues/783 - collectAll => sequence in Cats land
-
-      val fn: PartialFunction[Int, Int] = { x =>
-          x match {
-            case _ => x
-        }
-      }
-
-//      val sequenced: IO[Int, List[Int]] = IO.collectAllWith(List(aye, nay, aye))(fn)
       val sequenced: IO[Nothing, List[Unit]] = IO.collectAll(List(aye, nay, aye).map(_.ignore))
       val exit = zioRuntime.unsafeRunSync(sequenced)
       exit.map { xs =>
@@ -37,7 +29,6 @@ class ShortCircuitSpec extends WordSpec with Matchers {
       }
     }
   }
-
 
   "Monads" should {
     "yield failure if (success x failure)" in {

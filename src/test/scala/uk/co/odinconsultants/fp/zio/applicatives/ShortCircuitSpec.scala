@@ -21,27 +21,35 @@ class ShortCircuitSpec extends WordSpec with Matchers {
   "Using collectAll" should {
     "not short-circuit" in {
       // see https://github.com/zio/zio/issues/783 - collectAll => sequence in Cats land
-      val sequenced: IO[Int, List[Int]] = IO.collectAll(List(aye, nay, aye))
-      val result = for {
-        xs <- sequenced
-      } yield {
-        println(s"xs = ${xs.mkString(", ")}")
-        xs shouldBe List(1, -1, 1)
+
+      val fn: PartialFunction[Int, Int] = { x =>
+          x match {
+            case _ => x
+        }
       }
-      zioRuntime.unsafeRunSync(result)
+
+//      val sequenced: IO[Int, List[Int]] = IO.collectAllWith(List(aye, nay, aye))(fn)
+      val sequenced: IO[Nothing, List[Unit]] = IO.collectAll(List(aye, nay, aye).map(_.ignore))
+      val exit = zioRuntime.unsafeRunSync(sequenced)
+      exit.map { xs =>
+        println(s"xs = ${xs.mkString(", ")}")
+        xs should have length 3
+      }
     }
   }
 
 
   "Monads" should {
     "yield failure if (success x failure)" in {
-      val result: ZIO[Any, Int, Nothing] = for {
+      val result: ZIO[Any, Int, Int] = for {
         actual    <- aye *> nay
         expected  <- nay
       } yield {
         fail(s"actual = $actual, expected = $expected")
+        actual
       }
-      zioRuntime.unsafeRunSync(result)
+      val exit = zioRuntime.unsafeRunSync(result)
+      exit.succeeded shouldBe false
     }
     "yield failure if (success x failure x success x failure)" in {
       val result: ZIO[Any, Int, Nothing] = for {
@@ -50,7 +58,8 @@ class ShortCircuitSpec extends WordSpec with Matchers {
       } yield {
         fail(s"actual = $actual, expected = $expected")
       }
-      zioRuntime.unsafeRunSync(result) // note: short circuits
+      val exit = zioRuntime.unsafeRunSync(result) // note: short circuits
+      exit.succeeded shouldBe false
     }
     "yield failure if (failure x success)" in {
       val result: ZIO[Any, Int, Nothing] = for {
@@ -59,7 +68,8 @@ class ShortCircuitSpec extends WordSpec with Matchers {
       } yield {
         fail(s"actual = $actual, expected = $expected")
       }
-      zioRuntime.unsafeRunSync(result)
+      val exit = zioRuntime.unsafeRunSync(result) // note: short circuits
+      exit.succeeded shouldBe false
     }
     "yield success if (success x success)" in {
       val result: ZIO[Any, Nothing, Int] = for {
@@ -70,7 +80,8 @@ class ShortCircuitSpec extends WordSpec with Matchers {
         actual shouldBe 1
         1
       }
-      zioRuntime.unsafeRunSync(result)
+      val exit = zioRuntime.unsafeRunSync(result)
+      exit.succeeded shouldBe true
     }
   }
 

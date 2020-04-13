@@ -15,12 +15,6 @@ class ShortCircuitSpec extends WordSpec with Matchers {
 
 
   "Applicatives" should {
-    type ApplicativeType = ValidatedNec[Throwable, Int]
-    def allOrNothing[F[_]: Applicative, A](xs: NonEmptyList[F[A]]): F[A] = {
-      xs.foldLeft(xs.head) { case (a, x) =>
-        a *> x
-      }
-    }
     "not short circuit" in new ValidatedFixture {
       var i = 0
       def failure(): Validated[String, String] = {
@@ -73,7 +67,7 @@ class ShortCircuitSpec extends WordSpec with Matchers {
     val aye: MonadType = Right(1)
     val nay: MonadType = Left("nope")
     "short-circuit" in {
-      aye *> nay shouldBe nay
+      aye *> nay *> aye shouldBe nay
     }
     "not short circuit" in {
       aye *> aye shouldBe aye

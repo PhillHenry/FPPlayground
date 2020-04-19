@@ -18,12 +18,14 @@ class ShortCircuitSpec extends WordSpec with Matchers {
     "not short circuit" in new ValidatedFixture {
       var i = 0
       def failure(): Validated[String, String] = {
-        println("failure")
+        println(s"\nfailure ${Thread.currentThread().getName}")
+        new Exception().printStackTrace()
         i = i + 1
         invalid1
       }
       def success(): Validated[String, String] = {
-        println("valid")
+        println(s"\nvalid ${Thread.currentThread().getName}")
+        new Exception().printStackTrace()
         i = i + 1
         valid1
       }

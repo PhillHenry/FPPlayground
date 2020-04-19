@@ -14,13 +14,15 @@ class ShortCircuitSpec extends WordSpec with Matchers {
   trait ShortCircuitFixture {
     var nCalls = new AtomicInteger(0)
     val nay: IO[Int, Nothing] = ZIO.fail {
-      println("fail")
+      println(s"\nfail ${Thread.currentThread().getName}")
       nCalls.incrementAndGet()
+      new Exception().printStackTrace()
       -1
     }
     val aye: UIO[Int]         = ZIO.succeed {
-      println("success")
+      println(s"\nsuccess ${Thread.currentThread().getName}")
       nCalls.incrementAndGet()
+      new Exception().printStackTrace()
       1
     }
   }

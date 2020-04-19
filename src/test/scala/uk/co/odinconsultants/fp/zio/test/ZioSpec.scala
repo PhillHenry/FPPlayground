@@ -1,4 +1,4 @@
-package uk.co.odinconsultants.fp.zio
+package uk.co.odinconsultants.fp.zio.test
 
 import zio.ZIO
 import zio.test.Assertion.equalTo

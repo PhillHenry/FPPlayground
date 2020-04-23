@@ -1,6 +1,42 @@
 package uk.co.odinconsultants.fp.cats.ana_cata
 
 /**
+ * Anthony Cerruti @srnb_gitlab Apr 22 05:51
+ * If I have a tree:
+ *
+ * Tree("A", Vector(
+ *  Tree("B", Vector(
+ *    Tree("C", Vector(
+ *      Tree("A", Vector())
+ *    )
+ *  ),
+ *  Tree("C", Vector(
+ *    Tree("A", Vector())
+ *   )
+ * )
+ * I want to take equivalent sub-trees (There's one here, "C" -> "A") and turn that into something like this:
+ *
+ * Compressed(
+ *  root = Right(Tree("A", Vector(
+ *    Right(Tree("B", Vector(Left(1)))),
+ *    Left(1)
+ *  ),
+ *  subTrees = Map(
+ *    1 -> Tree("C", Vector(
+ *      Right(Tree("A", Vector()))
+ *    )
+ *  )
+ * )
+ * How solvable is this?
+ *
+ * I'd like an algorithm and not a heuristic. I'm running it on a ton of data as well, so if there are Big Data:tm: libraries that'll help me with it, I'm extremely interested.
+ *
+ *
+ * Rob Norris @tpolecat Apr 22 16:20
+ * srnb_gitlab here's a solution using Cofree https://gist.github.com/tpolecat/5c86f1ceba7ef50e12f229144b1f07ee
+ * never pass up an opportunity to coflatMap that shit
+ * I included an image with worksheet output … I don't know how to copy/paste the output as text
+ *
  * Rob Norris @tpolecat Apr 22 20:18
  * Honestly ana/cata on fix, free, and cofree are all I ever use.
  */
@@ -44,7 +80,7 @@ object TPolecat extends App {
       )
     )
 
-  show(tree)
+  println(show(tree))
 
   // A flat representation
   case class Flat[A](root: Int, table: Map[Int, (A, Vector[Int])])
@@ -58,10 +94,11 @@ object TPolecat extends App {
     }
 
   // Count of nodes in tree
-  tree.size
+  println(s"tree.size = ${tree.size}")
 
   // Count of nodes in table
-  flat.table.size
+  println(s"flat.table.size = ${flat.table.size}")
+  println(s"flat = $flat")
 
   // Unfold back into a tree
   val treeʹ: Tree[String] =
@@ -70,6 +107,6 @@ object TPolecat extends App {
       a => flat.table(a)._1
     )
 
-  show(tree )
-  show(treeʹ)
+  println(s"tree  = ${show(tree )}")
+  println(s"tree' = ${show(treeʹ)}")
 }

@@ -17,9 +17,9 @@ object Composition extends App {
 
   // we also need monadic transformer OptionT which will work only for Option (precisely F[Option[T]])
   def monadTransformers: OptionT[Future, Int] = {
-    val fa = OptionT[Future, Int](Future(Some(1)))
-    val fb = OptionT[Future, Int](Future(Some(2)))
-    val x: OptionT[Future, Int] = fa.flatMap(a => fb.map(b => a + b)) //note that a and b are already Int's not Future's
+    val fa: OptionT[Future, Int] = OptionT[Future, Int](Future(Some(1)))
+    val fb: OptionT[Future, Int] = OptionT[Future, Int](Future(Some(2)))
+    val x:  OptionT[Future, Int] = fa.flatMap(a => fb.map(b => a + b)) //note that a and b are already Int's not Future's
 
     val equivalently: OptionT[Future, Int] = for {
       a <- fa

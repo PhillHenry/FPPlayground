@@ -5,7 +5,10 @@ import cats.data.{EitherNec, Validated}
 
 object MyPar {
 
-  def concatStrings(x: String, y: String, z: String): String = s"x = $x, y = $y, z = $z"
+  def concatStrings(x: String, y: String, z: String): String = {
+    println(s"${Thread.currentThread().getName}: concatStrings: x= $x, y = $y, z = $z")
+    s"x = $x, y = $y, z = $z"
+  }
 
   def parToAccumulateErrors[T[String]: Applicative](t1: T[String], t2: T[String], t3: T[String]) = {
     import cats.implicits._

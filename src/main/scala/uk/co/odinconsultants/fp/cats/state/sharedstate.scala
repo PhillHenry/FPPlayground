@@ -48,7 +48,9 @@ object sharedstate extends IOApp {
     }
   }
 
-  override def run(args: List[String]): IO[ExitCode] =
+  override def run(args: List[String]): IO[ExitCode] = {
+    println(s"Main thread is '${Thread.currentThread().getName}''")
     masterProcess.as(ExitCode.Success)
+  }
 
 }

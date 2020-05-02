@@ -85,10 +85,12 @@ object MyLayers extends App {
 
     // provide the layer to the program
     val result:   ZIO[Any, DBError, Unit] = makeUser.provideLayer(fullLayer)
-    val x:        ZIO[Any, DBError, Int]  = result.map(_ => 1)
-    val exit:     UIO[Int]                = UIO(1) //  UIO[+A]      = ZIO[Any, Nothing, A]
-    val together: ZIO[Any, DBError, Int]  = x &> exit
-    together
-    ???
+    val exit:     UIO[Int]                = UIO(1)    // UIO[+A]      = ZIO[Any, Nothing, A]
+
+    val exitResult: ZIO[Any, DBError, Unit] = exit *> result
+
+    val resultExit: ZIO[Any, DBError, Int] = result *> exit
+
+    resultExit.catchAll(_ => exit)
   }
 }

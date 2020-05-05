@@ -30,8 +30,8 @@ object MyLayers extends App {
     // This simple live version depends only on a DB Connection
     val inMemory: Layer[Nothing, UserRepo] = ZLayer.succeed(
       new Service {
-        def getUser(userId: UserId): IO[DBError, Option[User]] = UIO(???)
-        def createUser(user: User): IO[DBError, Unit] = UIO(???)
+        def getUser(userId: UserId): IO[DBError, Option[User]] = UIO(None)
+        def createUser(user: User): IO[DBError, Unit] = UIO(println(s"Pretending to create $user"))
       }
     )
 

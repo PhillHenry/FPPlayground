@@ -78,7 +78,7 @@ object MyLayers extends App {
     } yield ()
 
     val logger: ZLayer[Console, Nothing, Logging] = Logging.consoleLogger
-    val memory: Layer[Nothing, UserRepo] = UserRepo.inMemory
+    val memory: Layer[Nothing, UserRepo]          = UserRepo.inMemory     // Layer[+E, +ROut]     = ZLayer[Any, E, ROut]
     // compose horizontally
     val horizontal: ZLayer[Console, Nothing, Logging with UserRepo] = logger ++ memory
 

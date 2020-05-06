@@ -92,6 +92,17 @@
       <artifactId>zio-streams_${scala.compat.version}</artifactId>
       <version>${zio.version}</version>
     </dependency>
+<!--    <dependency>-->
+<!--      <groupId>dev.zio</groupId>-->
+<!--      <artifactId>zio-http-core_${scala.compat.version}</artifactId>-->
+<!--      <version>${zio.version}</version>-->
+<!--    </dependency>-->
+    <!-- https://mvnrepository.com/artifact/org.polynote/uzhttp -->
+    <dependency>
+      <groupId>org.polynote</groupId>
+      <artifactId>uzhttp_${scala.compat.version}</artifactId>
+      <version>0.1.4</version>
+    </dependency>
     <dependency>
       <groupId>org.typelevel</groupId>
       <artifactId>cats-laws_${scala.compat.version}</artifactId>

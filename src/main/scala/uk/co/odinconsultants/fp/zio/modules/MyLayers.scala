@@ -77,8 +77,10 @@ object MyLayers extends App {
       _ <- Logging.info(s"user inserted")   // ZIO[Logging, Nothing, Unit]
     } yield ()
 
+    val logger: ZLayer[Console, Nothing, Logging] = Logging.consoleLogger
+    val memory: Layer[Nothing, UserRepo] = UserRepo.inMemory
     // compose horizontally
-    val horizontal: ZLayer[Console, Nothing, Logging with UserRepo] = Logging.consoleLogger ++ UserRepo.inMemory
+    val horizontal: ZLayer[Console, Nothing, Logging with UserRepo] = logger ++ memory
 
     // fulfill missing deps, composing vertically
     val fullLayer: Layer[Nothing, Logging with UserRepo] = Console.live >>> horizontal

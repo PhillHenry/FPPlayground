@@ -11,6 +11,23 @@ object FromIterableMain extends App {
   override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] = {
 
     /*
+egast05/02/2020
+I'm trying build something similar like the Akka Streams conflate functionality. Where elements from a faster producer
+are combined until the consumer can pull. I have written the following code which I thought would print the only the last
+produced element, but instead it always first prints the first produced element and then the last. Could it be that schedule
+first pulls and than waits the scheduled amount instead of waiting and then pulling?
+     */
+    val zioOriginal = for {
+      output <- Stream.fromIterable(List(1, 2, 3))
+        .schedule(Schedule.fixed(100.milli))
+        .bufferSliding(1)
+        .schedule(Schedule.fixed(2.second))
+        .tap(v => putStrLn(s"result: $v"))
+        .runDrain.fork
+      _ <- output.join.timeout(10.seconds)
+    } yield ()
+
+    /*
     egast05/03/2020
 @luis3m if this is the expected behavior it is not very obvious. If I use the following code and print what is
 published (and put into the buffer) and what is consumed from the buffer I see the following behavior:

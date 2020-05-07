@@ -9,6 +9,8 @@ import zio.stream._
 /**
 haemin05/02/2020
 Hi, I'm getting a fiber interruption after the end of the stream that produces fibers:
+ ghostdogpr05/02/2020
+forkDaemon instead of fork? So that it doesn’t get interrupted when the parent finishes
  */
 object FibreInterruption extends App {
 
@@ -26,7 +28,8 @@ object FibreInterruption extends App {
   override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] =
     doSomethingOverNetworkPeriodically
       .take(10)
-      .bufferUnbounded //.bufferSliding(128) doesn't interrupt
+//      .bufferUnbounded
+      .bufferSliding(128) // doesn't interrupt
       .run(accumulateResult)
       .flatMap(res => putStrLn(res.toString).as(0))
 }

@@ -84,6 +84,11 @@
     </dependency>
     <dependency>
       <groupId>dev.zio</groupId>
+      <artifactId>zio-test-junit_${scala.compat.version}</artifactId>
+      <version>${zio.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>dev.zio</groupId>
       <artifactId>zio_${scala.compat.version}</artifactId>
       <version>${zio.version}</version>
     </dependency>

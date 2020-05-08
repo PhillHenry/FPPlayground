@@ -8,10 +8,14 @@ import zio.test.{assert, _}
 
 object ZioTestIgnoringAssertionMaybeBug extends JUnitRunnableSpec {
 
-  override def spec: ZSpec[TestEnvironment, Any] = suite("Possible ZIO test bug?")(
-    testM("Something like this ignore assertions in a real test. ") {
-      ZIO.fromEither(Right("actual")).map { x =>
-        assert(x)(equalTo("actual")) // && assert(x)(equalTo("not actual"))
+  override def spec: ZSpec[TestEnvironment, Any] = suite("Look closely....")(
+    testM("Why is an obvious;y wrong assertion passing") {
+      ZIO("Actual").map { x =>
+        assert(x)(equalTo("Actual")) &&
+          assert(x.toUpperCase)(equalTo("ACTUAL")) &&
+          assert(x.toUpperCase)(equalTo("Obviously wrong")) &&
+          assert(x.length)(equalTo(6))
+          assert(x.toLowerCase)(equalTo("actual"))
       }
     }
   )

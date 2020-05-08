@@ -206,6 +206,7 @@
               <args>
                 <!--<arg>-make:transitive</arg>-->
                 <arg>-Ypartial-unification</arg>
+                <arg>-Ywarn-value-discard</arg>
                 <arg>-dependencyfile</arg>
                 <arg>${project.build.directory}/.scala_dependencies</arg>
               </args>

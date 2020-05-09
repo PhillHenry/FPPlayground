@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 
 object MyStateApp extends IOApp {
 
-  val printlnIO = IO { println("IO: Hello world!") }
+  val printlnIO = IO { println("IO: initial F") }
 
   val useFn: PeriodicMonitor[IO, Unit] => IO[Unit] = _.get.flatMap { _ =>
     println("inside flatmap")
@@ -45,8 +45,8 @@ object PeriodicMonitor {
                                           t: FiniteDuration
                                         ): Resource[F, PeriodicMonitor[F, A]] = {
     sealed trait State
-    case class FirstCall(waitV: Deferred[F, Either[Throwable, A]]) extends State
-    case class NextCalls(v: Either[Throwable, A]) extends State
+    case class FirstCall(waitV: Deferred[F, Either[Throwable, A]])  extends State
+    case class NextCalls(v:     Either[Throwable, A])               extends State
 
     val initial: F[Ref[F, State]] =
       for {
@@ -57,6 +57,7 @@ object PeriodicMonitor {
     Stream
       .eval(initial)
       .flatMap { state: Ref[F, State] =>
+
         val read = new PeriodicMonitor[F, A] {
           def get: F[A] = state.get.flatMap {
             case FirstCall(wait) => wait.get.rethrow
@@ -65,10 +66,11 @@ object PeriodicMonitor {
         }
 
         val write: F[Unit] = action.attempt.flatMap { v =>
-          state.modify {
+          val modified: F[F[Unit]] = state.modify {
             case FirstCall(wait) => NextCalls(v) -> wait.complete(v).void
             case NextCalls(_)    => NextCalls(v) -> ().pure[F]
-          }.flatten
+          }
+          modified.flatten
         }
 
         Stream.emit(read).concurrently(Stream.repeatEval(write).metered(t))
@@ -97,6 +99,7 @@ why there is no F[_] parameter, it's normally in the outer definition
 trait Thing[F[_], A] {
   def get: F[A]
 }
+
 object Thing {
   def create[F[_]: Concurrent: Timer, A](
                                           action: F[A],
@@ -104,7 +107,7 @@ object Thing {
                                         ): Resource[F, Thing[F, A]] = {
     sealed trait State
     case class FirstCall(waitV: Deferred[F, A]) extends State
-    case class NextCalls(v: A) extends State
+    case class NextCalls(v: A)                  extends State
 
     val initial = for {
       d <- Deferred[F, A]
@@ -114,17 +117,18 @@ object Thing {
     Stream
       .eval(initial)
       .flatMap { state =>
+
         val read = new Thing[F, A] {
-          def get = state.get.flatMap {
-            case FirstCall(wait) => wait.get
-            case NextCalls(v) => v.pure[F]
+          def get: F[A] = state.get.flatMap {
+            case FirstCall(wait)  => wait.get
+            case NextCalls(v)     => v.pure[F]
           }
         }
 
         val write = action.flatMap { v =>
           state.modify {
-            case FirstCall(wait) => NextCalls(v) -> wait.complete(v).void
-            case NextCalls(_) => NextCalls(v) -> ().pure[F]
+            case FirstCall(wait)  => NextCalls(v) -> wait.complete(v).void
+            case NextCalls(_)     => NextCalls(v) -> ().pure[F]
           }.flatten
         }
 

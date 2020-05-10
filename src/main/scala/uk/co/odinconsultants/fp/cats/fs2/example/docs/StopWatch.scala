@@ -31,7 +31,21 @@ object StopWatchMain extends IOApp {
   import StopWatch._
 
   override def run(args: List[String]): IO[ExitCode] = {
-    myCodeRunCreate
+    aboutToSleepYieldThenNothing *>
+    printsTime1
+  }
+
+  def printsTime1: IO[ExitCode] = {
+    val io: IO[Int] = for {
+      stopWatch <- create[IO].zip(sleepingStream).map(_._1).compile.toList
+      xs        = stopWatch.map(_.elapsedSeconds)
+      time      <- xs.last
+    } yield {
+      println(s"time = $time |xs| = ${xs.length}")
+      time
+    }
+
+    io *> IO(ExitCode.Success)
   }
 
   /**
@@ -39,9 +53,7 @@ object StopWatchMain extends IOApp {
    * "Note that `create` returns a `Stream[F, StopWatch[F]]`, even
    * though there is only one instance being emitted: this is less than ideal,"
    */
-  def myCodeRunCreate: IO[ExitCode] = {
-    val s: Stream[IO, StopWatch[IO]] = create[IO]
-
+  def aboutToSleepYieldThenNothing: IO[ExitCode] = {
     /**
      *  "so we might think about returning an `F[StopWatch[F]]` with the following code
      *
@@ -53,20 +65,23 @@ object StopWatchMain extends IOApp {
      * which causes `concurrently` to stop the `process` stream. As a  result, `elapsedSeconds`
      * never gets updated."
      */
-//    val first:      IO[Int]   = s.head.compile.lastOrError.flatMap(_.elapsedSeconds)
-//    val printFirst: IO[Unit]  = first.map(x => println(s"printFirst = $x") )
-
-    val sleepingStream: Stream[IO, Unit] = Stream.eval(IO.sleep(2.second)).metered(1.seconds)
-
-    val io: IO[Int] = for {
-      stopWatch <- s.zip(sleepingStream).map(_._1).compile.toList
-      time      <- stopWatch.map(_.elapsedSeconds).last
-    } yield {
-      println(s"time = $time")
-      time
-    }
-
-    /*printFirst *>*/ io *> IO(ExitCode.Success)
+    sleepyStopWatch(create[IO]).take(5).compile.drain.map(_ => ExitCode.Success) // "yield" but no "flatMap". "About to sleep" but no "sleep over"
   }
 
+  def sleepyStopWatch(s: Stream[IO, StopWatch[IO]]): Stream[IO, IO[Unit]] = for {
+    stopWatch <- s.zip(sleepingStream).map(_._1)
+  } yield {
+    println("yield")
+    stopWatch.elapsedSeconds.flatMap { t =>
+      println("flatMap")
+      IO {
+        println(s"t = $t")
+      }
+    }
+  }
+
+  val sleepingStream: Stream[IO, Unit] = (Stream.eval(IO { println("About to sleep") } )
+    ++ Stream.eval(IO.sleep(20.second)) // this doesn't appear to be executed...
+    ++ Stream.eval(IO { println("sleep over") } )
+    ).metered(1.seconds)
 }

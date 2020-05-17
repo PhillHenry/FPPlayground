@@ -20,8 +20,9 @@ object StopWatch {
       val api = new StopWatch[F] {
         def elapsedSeconds: F[Int] = {
           println(s"elapsedSeconds")
-          c.get.map { x =>
-            println(s"elapsedSeconds map = $x")
+          val got: F[Int] = c.get
+          got.map { x =>
+            println(s"get $x")
             x
           }
         }
@@ -67,8 +68,8 @@ object StopWatchMain extends IOApp {
 
   def useResource(s: Stream[IO, StopWatch[IO]]): IO[ExitCode] = {
     val io: Resource[IO, List[IO[Int]]] = for {
-      stopWatch <- s.zip(sleepingStream).map(_._1).compile.resource.toList
-      xs        = stopWatch.map(_.elapsedSeconds)
+      stopWatch <- s.zip(sleepingStream).map(_._1.elapsedSeconds).compile.resource.toList
+      xs        = stopWatch
     } yield {
       xs.map{ io =>
         val printIO = io.map { time =>
@@ -84,7 +85,7 @@ object StopWatchMain extends IOApp {
       x
     }
 
-    y *> IO(ExitCode.Success)
+    y *> y *> IO(ExitCode.Success)
   }
 
   /**

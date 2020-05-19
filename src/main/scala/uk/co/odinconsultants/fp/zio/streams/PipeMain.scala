@@ -28,18 +28,7 @@ object PipeMain extends App {
   val outStream = new ByteArrayOutputStream(bufferSize)
 
   override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] = {
-
-    val result: ZIO[Blocking, IOException, String] = for {
-      outputStream <- outZIO(outStream)
-      sink: ZSink[Blocking, IOException, Nothing, Chunk[Byte], Int] = ZSink.fromOutputStream(outputStream)
-      _ <- input(inStream)
-        .run(sink)
-        .ensuring(UIO(outputStream.close()))
-//        .forkDaemon
-    } yield  {
-      new String(outputStream.toByteArray)
-    }
-    result.fold(_.printStackTrace(), x => println(s"success. Length = ${x.length}")).map(_ => 1)
+    doPipe(inStream, outStream).fold(_.printStackTrace(), x => println(s"success. Length = ${outStream.toByteArray.length}")).map(_ => 1)
   }
 
   def doPipe(inStream: InputStream, outStream: OutputStream): ZIO[Blocking, IOException, String] = for {

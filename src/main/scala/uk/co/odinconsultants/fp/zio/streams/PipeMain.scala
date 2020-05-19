@@ -9,6 +9,10 @@ import zio.stream._
 import zio.console._
 import zio.duration._
 
+/**
+ * Adapted from:
+ * https://github.com/zio/zio-process/blob/9f0b40d728d165cecf13cdd4300ef7fe689bb749/src/main/scala/zio/process/Command.scala#L139-L143
+ */
 object PipeMain extends App {
 
   val bufferSize = 1024

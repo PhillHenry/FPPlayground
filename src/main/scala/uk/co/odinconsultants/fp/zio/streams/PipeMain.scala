@@ -48,7 +48,6 @@ object PipeMain extends App {
     _ <- input(inStream)
       .run(sink)
       .ensuring(UIO(outputStream.close()))
-      .forkDaemon
   } yield  {
     "done"
   }

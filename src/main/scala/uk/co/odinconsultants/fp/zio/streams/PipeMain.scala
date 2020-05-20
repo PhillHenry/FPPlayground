@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputS
 
 import zio.blocking.{Blocking, effectBlockingInterrupt}
 import zio.clock.Clock
-import zio.{App, Chunk, Schedule, UIO, ZIO}
+import zio.{App, Chunk, Schedule, UIO, URIO, ZIO, ZManaged}
 import zio.stream._
 import zio.console._
 import zio.duration._
@@ -24,11 +24,27 @@ object PipeMain extends App {
   def input(in: InputStream): ZStream[Blocking, IOException, Chunk[Byte]] =
     ZStream.fromInputStream(in, chunkSize).chunks
 
-  val inStream  = new ByteArrayInputStream(("This is a test" * 100).getBytes())
-  val outStream = new ByteArrayOutputStream(bufferSize)
+
 
   override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] = {
+    val inStream  = new ByteArrayInputStream(("This is a test" * 100).getBytes())
+    val outStream = new ByteArrayOutputStream(bufferSize)
     doPipe(inStream, outStream).fold(_.printStackTrace(), x => println(s"success. Length = ${outStream.toByteArray.length}")).map(_ => 1)
+  }
+
+  val sleep1s: URIO[Clock, Unit] = URIO(println("Sleeping...")) *> ZIO.sleep(1 second)
+
+  def slowInput: ZManaged[Clock, Nothing, InputStream] = {
+    val repeatingSleep: ZStream[Clock, Nothing, Unit] = ZStream.repeatEffect(sleep1s)
+    val bytes:          ZStream[Clock, Nothing, Byte] = repeatingSleep.zipWithIndex.takeUntil(_._2 == 5).map(_._2.toByte)
+    bytes.toInputStream
+  }
+
+  def doBlockingPipe(outStream: OutputStream): ZManaged[Clock, Nothing, String] = for {
+    in <- slowInput
+  } yield  {
+    val read: Int = in.read()
+    s"read $read"
   }
 
   def doPipe(inStream: InputStream, outStream: OutputStream): ZIO[Blocking, IOException, String] = for {
@@ -40,6 +56,7 @@ object PipeMain extends App {
   } yield  {
     "done"
   }
+
 }
 
 

@@ -11,7 +11,7 @@ import zio.test.Assertion._
 
 object PipingSpec extends DefaultRunnableSpec  {
 
-  val msg = "this is a test"
+  val msg = "this is a test" * 1000
   val bytes: Array[Byte] = msg.getBytes
 
   override def spec: ZSpec[TestEnvironment, Any] = {
@@ -21,6 +21,16 @@ object PipingSpec extends DefaultRunnableSpec  {
           out.write(bytes)
         }
         val stream: ZStream[Blocking, Throwable, Byte] = Piping.readOutputStream(write)
+        for {
+          res1 <- stream.runCollect
+        } yield assert(new String(res1.toArray))(equalTo(msg))
+      }
+      ,
+      testM("should use promises"){
+        val write: OutputStream => Unit = { out =>
+          out.write(bytes)
+        }
+        val stream: ZStream[Blocking, Throwable, Byte] = Piping.fromOutputStream(write)
         for {
           res1 <- stream.runCollect
         } yield assert(new String(res1.toArray))(equalTo(msg))

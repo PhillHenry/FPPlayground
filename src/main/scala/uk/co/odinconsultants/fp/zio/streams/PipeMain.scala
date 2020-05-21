@@ -41,13 +41,6 @@ object PipeMain extends App {
   def slowInput: ZManaged[Clock, Nothing, InputStream] =
     slowStream.toInputStream
 
-  def doBlockingPipe(outStream: OutputStream): ZManaged[Clock, Nothing, String] = for {
-    in <- slowInput
-  } yield  {
-    val read: Int = in.read()
-    s"read $read"
-  }
-
   def doPipe(inStream: InputStream, outStream: OutputStream): ZIO[Blocking, IOException, String] = for {
     outputStream <- effectBlockingInterrupt(outStream).refineToOrDie[IOException]
     sink: ZSink[Blocking, IOException, Nothing, Chunk[Byte], Int] = ZSink.fromOutputStream(outputStream)

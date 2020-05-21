@@ -45,15 +45,13 @@ object PipeMainSpec extends DefaultRunnableSpec {
       }
       ,
       testM("should read slow, blocking streams"){
-        val outStream = new ByteArrayOutputStream(bufferSize)
-        val managed = for {
-          _   <- TestClock.adjust(5.seconds)
-          p <- doBlockingPipe(outStream).use(x => ZIO(x))
+        for {
+          _   <- TestClock.adjust(15.seconds)
+          s <- slowStream.chunkN(1024).take(5).runCollect
         } yield {
-          assert(outStream.toByteArray.mkString(","))(equalTo(Array(0,1,2,3,4).map(_.toByte).mkString(",")))
+          assert(s.mkString(","))(equalTo(Array(0,1,2,3,4).map(_.toByte).mkString(",")))
         }
-        managed
-      } @@ ignore
+      }
     )
   }
 }

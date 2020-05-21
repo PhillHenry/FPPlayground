@@ -1,10 +1,10 @@
 package uk.co.odinconsultants.fp.zio.streams
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputStream, OutputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputStream, OutputStream, PipedInputStream, PipedOutputStream}
 
 import zio.blocking.{Blocking, effectBlockingInterrupt}
 import zio.clock.Clock
-import zio.{App, Chunk, Schedule, UIO, URIO, ZIO, ZManaged}
+import zio.{App, Chunk, Promise, Schedule, UIO, URIO, ZIO, ZManaged}
 import zio.stream._
 import zio.console._
 import zio.duration._
@@ -25,7 +25,6 @@ object PipeMain extends App {
     ZStream.fromInputStream(in, chunkSize).chunks
 
 
-
   override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] = {
     val inStream  = new ByteArrayInputStream(("This is a test" * 100).getBytes())
     val outStream = new ByteArrayOutputStream(bufferSize)
@@ -34,11 +33,13 @@ object PipeMain extends App {
 
   val sleep1s: URIO[Clock, Unit] = URIO(println("Sleeping...")) *> ZIO.sleep(1 second)
 
-  def slowInput: ZManaged[Clock, Nothing, InputStream] = {
+  val slowStream: ZStream[Clock, Nothing, Byte] = {
     val repeatingSleep: ZStream[Clock, Nothing, Unit] = ZStream.repeatEffect(sleep1s)
-    val bytes:          ZStream[Clock, Nothing, Byte] = repeatingSleep.zipWithIndex.takeUntil(_._2 == 5).map(_._2.toByte)
-    bytes.toInputStream
+    repeatingSleep.zipWithIndex.takeUntil(_._2 == 5).map(_._2.toByte)
   }
+
+  def slowInput: ZManaged[Clock, Nothing, InputStream] =
+    slowStream.toInputStream
 
   def doBlockingPipe(outStream: OutputStream): ZManaged[Clock, Nothing, String] = for {
     in <- slowInput

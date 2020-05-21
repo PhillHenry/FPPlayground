@@ -34,18 +34,17 @@ object PipeMainSpec extends DefaultRunnableSpec {
         result
       }
       ,
-      testM("should read slow streams"){
+      testM("should read first byte of slow streams"){
         val managed = for {
           _     <- TestClock.adjust(5.seconds)
           read  <- slowInput.use(x => ZIO(x.read()))
-          read2 <- slowInput.use(x => ZIO(x.read()))
         } yield {
           assert(read)(equalTo(0)) //&& assert(read2)(equalTo(1))
         }
         managed
       }
       ,
-      testM("should read slow streams"){
+      testM("should read slow, blocking streams"){
         val outStream = new ByteArrayOutputStream(bufferSize)
         val managed = for {
           _   <- TestClock.adjust(5.seconds)

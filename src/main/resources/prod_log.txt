@@ -1,0 +1,7 @@
+Id_1 2017–10–28 00:04:43 INFO c.m.CamelApp: Running with Spring Boot
+Id_3 2017–10–28 00:04:43 WARN c.m.CamelApp: No active profile set, falling back to default profiles: default
+Id_4 2017–10–28 00:04:56 INFO c.m.amelBean: Process Data File: C:\data\full\Residential_201709301056.txt
+Id_5 2017–10–28 00:06:37 ERROR c.m.s.RepoServiceImpl: null: 1048 Portage Rd
+Id_6 2017–10–28 00:06:37 WARN c.m.s.RepoServiceImpl: Total properties in file: 25338, New: 25337, Existing: 0
+Id_7 2017–10–28 00:34:34 INFO c.m.s.RepoServiceImpl: Active input: 25344
+Id_8 2017–10–28 00:35:54 DEBUG c.m.s.RepoServiceImpl: Done parsing file: 871.xml

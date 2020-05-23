@@ -59,8 +59,9 @@ Ugh this is so tricky
     } yield (in, out)
 
     ZStream.fromEffect(pipes).flatMap { case (in, out) =>
-      val chunks: ZStreamChunk[Any, IOException, Byte] = ZStream.fromInputStream(in).ensuring(ZIO.effectTotal(in.close()))
-      chunks.flattenChunks.drainFork {
+      val chunks: ZStreamChunk[Any, IOException, Byte]  = ZStream.fromInputStream(in).ensuring(ZIO.effectTotal(in.close()))
+      val stream: ZStream[Any, IOException, Byte]       = chunks.flattenChunks
+      stream.drainFork {
         ZStream.fromEffect(effectBlocking(write(out)).ensuring(ZIO.effectTotal(out.close())))
       }
     }

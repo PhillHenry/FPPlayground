@@ -34,6 +34,15 @@ object PipeMainSpec extends DefaultRunnableSpec {
         result
       }
       ,
+    testM("should be non blocking"){
+       for {
+          _ <- TestClock.adjust(15.seconds)
+          p <- pipeNonBlocking(slowStream).chunkN(1024).runCollect
+        } yield {
+          assert(p.mkString(","))(equalTo(Array(0,1,2,3,4,5).map(_.toByte).mkString(",")))
+        }
+      } @@ timeout(10 seconds)
+      ,
       testM("should read slow, blocking streams"){
         for {
           _ <- TestClock.adjust(15.seconds)

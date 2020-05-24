@@ -16,11 +16,11 @@ object NonBlockingPipeMainSpec extends DefaultRunnableSpec {
       testM("should be non blocking"){
         for {
           _ <- TestClock.adjust(10.seconds)
-          p <- piping(infiniteSlowStream).runCollect
+          p <- piping(infiniteSlowStream).take(4).runCollect
         } yield {
-          assert(p.mkString(","))(equalTo(Array(0,1,2,3).map(_.toByte).mkString(",")))
+          assert(p.mkString(","))(equalTo(Array(0,1,2,3).mkString(",")))
         }
-      } @@ timeout(15 seconds)  @@ ignore
+      } @@ timeout(15 seconds)
     )
   }
 

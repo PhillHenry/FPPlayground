@@ -51,7 +51,7 @@ object PipeMain extends App {
     in  <- ZIO.effectTotal(new PipedInputStream(out))
   } yield (in, out)
 
-  def piping(input: ZStream[Clock, IOException, Byte]): ZStream[Blocking with Clock, Throwable, Byte] = {
+  def piping(input: ZStream[Clock, IOException, Byte]): ZStream[Blocking with Clock, Throwable, Int] = {
 
     ZStream.fromEffect(pipes).flatMap { case (in, out) =>
 
@@ -62,7 +62,7 @@ object PipeMain extends App {
             out.write(b)
           })
       } yield {
-        b
+        in.read()
       }
 
       s

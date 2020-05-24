@@ -53,17 +53,13 @@ So I guess I can't use ensuring
 Ugh this is so tricky
    */
   def readOutputStream(write: OutputStream => Unit): ZStream[Blocking, Throwable, Byte] = {
-    val pipes: ZIO[Any, Nothing, (PipedInputStream, PipedOutputStream)] = for {
-      out <- ZIO.effectTotal(new PipedOutputStream)
-      in  <- ZIO.effectTotal(new PipedInputStream(out))
-    } yield (in, out)
-
-    ZStream.fromEffect(pipes).flatMap { case (in, out) =>
-      val chunks: ZStreamChunk[Any, IOException, Byte]  = ZStream.fromInputStream(in).ensuring(ZIO.effectTotal(in.close()))
-      val stream: ZStream[Any, IOException, Byte]       = chunks.flattenChunks
-      stream.drainFork {
+    ZStream.fromEffect(PipeMain.pipes).flatMap { case (in, out) =>
+      val chunks: ZStreamChunk[Any,       IOException, Byte]  = ZStream.fromInputStream(in).ensuring(ZIO.effectTotal(in.close()))
+      val stream: ZStream     [Any,       IOException, Byte]  = chunks.flattenChunks
+      val x:      ZStream     [Blocking,  Throwable, Byte]    = stream.drainFork {
         ZStream.fromEffect(effectBlocking(write(out)).ensuring(ZIO.effectTotal(out.close())))
       }
+      x
     }
   }
 }

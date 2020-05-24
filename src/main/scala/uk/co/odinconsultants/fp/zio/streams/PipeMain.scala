@@ -33,9 +33,17 @@ object PipeMain extends App {
 
   val sleep1s: URIO[Clock, Unit] = URIO(println("Sleeping...")) *> ZIO.sleep(1 second)
 
-  val slowStream: ZStream[Clock, IOException, Byte] = {
+  val finiteSlowStream: ZStream[Clock, IOException, Byte] =
+    infiniteSlowStream.takeUntil(_ == 5)
+
+
+  def infiniteSlowStream: ZStream[Clock, Nothing, Byte] = {
     val repeatingSleep: ZStream[Clock, Nothing, Unit] = ZStream.repeatEffect(sleep1s)
-    repeatingSleep.zipWithIndex.takeUntil(_._2 == 5).map(_._2.toByte)
+    repeatingSleep.zipWithIndex.map { x =>
+      val b = x._2.toByte
+      println(s"Slow stream b = $b")
+      b
+    }
   }
 
   val pipes: ZIO[Any, Nothing, (PipedInputStream, PipedOutputStream)] = for {
@@ -43,22 +51,26 @@ object PipeMain extends App {
     in  <- ZIO.effectTotal(new PipedInputStream(out))
   } yield (in, out)
 
-  def pipeNonBlocking(input: ZStream[Clock, IOException, Byte]): ZStream[Clock, Throwable, Int] = {
+  def piping(input: ZStream[Clock, IOException, Byte]): ZStream[Blocking with Clock, Throwable, Byte] = {
 
-    val x: ZStream[Clock, IOException, InputStream] = for {
-      pipe    <- ZStream.fromEffect(pipes)
-      inByte  <- input
-    } yield {
-      pipe._2.write(inByte)
-      pipe._1
+    ZStream.fromEffect(pipes).flatMap { case (in, out) =>
+
+      val s = for {
+        b <- input
+        x <- ZStream.fromEffect(effectBlocking {
+            println(s"b = $b")
+            out.write(b)
+          })
+      } yield {
+        b
+      }
+
+      s
     }
 
-    val out: ZStream[Clock, Throwable, Int] = x.flatMap { in =>
-      ZStream.fromEffect(ZIO(in.read()))
-    }
-
-    out
   }
+
+  def reading(in: InputStream): ZIO[Blocking, Throwable, Int] = effectBlocking(in.read())
 
   def doPipe(inStream: InputStream, outStream: OutputStream): ZIO[Blocking, IOException, String] = for {
     outputStream <- effectBlockingInterrupt(outStream).refineToOrDie[IOException]

@@ -22,31 +22,22 @@ object PipeMainSpec extends DefaultRunnableSpec {
 
   override def spec: ZSpec[TestEnvironment, Any] = {
     suite("Pipe")(
-    testM("should be non blocking"){
-        val inStream  = new ByteArrayInputStream(bytes)
-        val outStream = new ByteArrayOutputStream(bufferSize)
-        val result: ZIO[Blocking, IOException, TestResult] = for {
-          p <- doPipe(inStream, outStream).fork
-          _ <- p.join
-        } yield {
-          assert(new String(outStream.toByteArray))(equalTo(msg))
+      testM("should be non blocking"){
+          val inStream  = new ByteArrayInputStream(bytes)
+          val outStream = new ByteArrayOutputStream(bufferSize)
+          val result: ZIO[Blocking, IOException, TestResult] = for {
+            p <- doPipe(inStream, outStream).fork
+            _ <- p.join
+          } yield {
+            assert(new String(outStream.toByteArray))(equalTo(msg))
+          }
+          result
         }
-        result
-      }
-      ,
-    testM("should be non blocking"){
-       for {
-          _ <- TestClock.adjust(15.seconds)
-          p <- pipeNonBlocking(slowStream).chunkN(1024).runCollect
-        } yield {
-          assert(p.mkString(","))(equalTo(Array(0,1,2,3,4,5).map(_.toByte).mkString(",")))
-        }
-      } @@ timeout(10 seconds)
       ,
       testM("should read slow, blocking streams"){
         for {
           _ <- TestClock.adjust(15.seconds)
-          s <- slowStream.chunkN(1024).runCollect
+          s <- finiteSlowStream.chunkN(1024).runCollect
         } yield {
           assert(s.mkString(","))(equalTo(Array(0,1,2,3,4,5).map(_.toByte).mkString(",")))
         }

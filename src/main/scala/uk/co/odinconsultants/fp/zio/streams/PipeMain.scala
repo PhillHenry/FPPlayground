@@ -68,10 +68,8 @@ object PipeMain extends App {
 
       val s = for {
         b <- input
-        x <- ZStream.fromEffect(effectBlocking {
-            println(s"b = $b")
-            out.write(b)
-          })
+        blockingWrite:  ZIO[Blocking, Throwable, Unit]  = effectBlocking(writing(b))
+        x <- ZStream.fromEffect(blockingWrite)
       } yield {
         reading()
       }

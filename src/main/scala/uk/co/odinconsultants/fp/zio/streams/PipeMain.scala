@@ -53,6 +53,8 @@ object PipeMain extends App {
 
   def piping(input: ZStream[Clock, IOException, Byte]) = {
 
+    type Exchange = Int
+
     ZStream.fromEffect(pipes).flatMap { case (in, out) =>
 
       def writing(b: Byte): Unit = {
@@ -61,22 +63,22 @@ object PipeMain extends App {
         out.flush()
       }
 
-      def reading(): Int = {
+      def reading(): Exchange = {
         val x = in.read()
         println(s"reading $x")
         x
       }
 
-      val s = for {
-        b <- input
-        blockingWrite:  ZIO[Blocking, Throwable, Unit]  = effectBlocking(writing(b))
-        blockingRead:   ZIO[Blocking, Throwable, Int] = effectBlocking(reading())
-        x <- input.drainFork(ZStream.fromEffect(blockingWrite) ++ ZStream.fromEffect(blockingRead))
+      for {
+        byteIn <- input
+        blockingWrite:  ZIO[Blocking, Throwable, Unit]          = effectBlocking(writing(byteIn))
+        blockingRead:   ZIO[Blocking, Throwable, Exchange]      = effectBlocking(reading())
+        writingStream:  ZStream[Blocking, Throwable, Unit]      = ZStream.fromEffect(blockingWrite)
+        readingStream:  ZStream[Blocking, Throwable, Exchange]  = ZStream.fromEffect(blockingRead)
+        byteOut <- input.drainFork(writingStream ++ readingStream)
       } yield {
-        x
+        byteOut
       }
-
-      s
     }
 
   }

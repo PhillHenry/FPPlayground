@@ -55,6 +55,17 @@ object PipeMain extends App {
 
     ZStream.fromEffect(pipes).flatMap { case (in, out) =>
 
+      def writing(b: Byte): Unit = {
+        println(s"writing $b")
+        out.write(b)
+      }
+
+      def reading(): Int = {
+        val x = in.read()
+        println(s"reading $x")
+        x
+      }
+
       val s = for {
         b <- input
         x <- ZStream.fromEffect(effectBlocking {
@@ -62,7 +73,7 @@ object PipeMain extends App {
             out.write(b)
           })
       } yield {
-        in.read()
+        reading()
       }
 
       s

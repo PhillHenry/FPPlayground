@@ -74,7 +74,7 @@ object PipeMain extends App {
         blockingRead:   ZIO[Blocking, Throwable, Exchange]      = effectBlocking(reading())
         writingStream:  ZStream[Blocking, Throwable, Unit]      = ZStream.fromEffect(blockingWrite)
         readingStream:  ZStream[Blocking, Throwable, Exchange]  = ZStream.fromEffect(blockingRead)
-        byteOut <- input.drainFork(writingStream ++ readingStream).chunkN(chunkSize)
+        byteOut <- (writingStream *> readingStream).drainFork(input).chunkN(chunkSize)
       } yield {
         byteOut
       }

@@ -12,11 +12,15 @@ object MyZIOStreamsSpec extends DefaultRunnableSpec {
   val first5Fibs = List(0, 1, 1, 2, 3)
 
   override def spec: ZSpec[TestEnvironment, Any] = suite("Streams")(
+    testM("just because it's a val doesn't mean it maintains state") {
+      assertM((fibonacciStream.take(5) ++ fibonacciStream.take(5)).runCollect)(equalTo(first5Fibs ::: first5Fibs))
+    }
+      ,
     testM("interleaved should be a mix of Unit and pure values") {
       assertM(interleaved.take(5).runCollect)(not(equalTo(first5Fibs))) // because it has some Units in there
     }
       ,
-    testM("forked should only collect pure") {
+    testM("forked should only collect 'outer'' stream values") {
       assertM(fibForkPrint.take(5).runCollect)(equalTo(first5Fibs))
     }
       ,

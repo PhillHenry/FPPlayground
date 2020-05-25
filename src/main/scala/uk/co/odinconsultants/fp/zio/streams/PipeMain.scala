@@ -1,13 +1,12 @@
 package uk.co.odinconsultants.fp.zio.streams
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, IOException, InputStream, OutputStream, PipedInputStream, PipedOutputStream}
+import java.io._
 
 import zio.blocking.{Blocking, effectBlocking, effectBlockingInterrupt}
 import zio.clock.Clock
-import zio.{App, Chunk, Promise, Schedule, UIO, URIO, ZIO, ZManaged}
-import zio.stream._
-import zio.console._
 import zio.duration._
+import zio.stream._
+import zio._
 
 /**
  * Adapted from:
@@ -51,7 +50,7 @@ object PipeMain extends App {
     in  <- ZIO.effectTotal(new PipedInputStream(out))
   } yield (in, out)
 
-  def piping(input: ZStream[Clock, IOException, Byte]) = {
+  def piping(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5) = {
 
     type Exchange = Int
 
@@ -69,16 +68,18 @@ object PipeMain extends App {
         x
       }
 
-      for {
-        byteIn <- input
+      val s = for {
+        byteIn <- input.chunkN(chunkSize)
         blockingWrite:  ZIO[Blocking, Throwable, Unit]          = effectBlocking(writing(byteIn))
         blockingRead:   ZIO[Blocking, Throwable, Exchange]      = effectBlocking(reading())
         writingStream:  ZStream[Blocking, Throwable, Unit]      = ZStream.fromEffect(blockingWrite)
         readingStream:  ZStream[Blocking, Throwable, Exchange]  = ZStream.fromEffect(blockingRead)
-        byteOut <- input.drainFork(writingStream ++ readingStream)
+        byteOut <- input.drainFork(writingStream ++ readingStream).chunkN(chunkSize)
       } yield {
         byteOut
       }
+
+      s.flattenChunks
     }
 
   }

@@ -50,21 +50,22 @@ object PipeMain extends App {
     in  <- ZIO.effectTotal(new PipedInputStream(out))
   } yield (in, out)
 
-  def piping(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5) = {
+  type Exchange = Int
 
-    type Exchange = Int
+  def piping(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5, logging: Boolean = true) = {
+
 
     ZStream.fromEffect(pipes).flatMap { case (in, out) =>
 
       def writing(b: Byte): Unit = {
-        println(s"writing $b")
+        if (logging) println(s"writing $b")
         out.write(b)
         out.flush()
       }
 
       def reading(): Exchange = {
         val x = in.read()
-        println(s"reading $x")
+        if (logging) println(s"reading $x")
         x
       }
 

@@ -54,12 +54,11 @@ object PipeMain extends App {
 
   def piping(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5, logging: Boolean = true) = {
 
-
     ZStream.fromEffect(pipes).flatMap { case (in, out) =>
 
-      def writing(b: Byte): Unit = {
+      def writing(b: Chunk[Byte]): Unit = {
         if (logging) println(s"writing $b")
-        out.write(b)
+        out.write(b.toArray)
         out.flush()
       }
 
@@ -70,17 +69,17 @@ object PipeMain extends App {
       }
 
       val s = for {
-        byteIn <- input.chunkN(chunkSize)
+        byteIn <- input.chunkN(chunkSize).chunks
         blockingWrite:  ZIO[Blocking, Throwable, Unit]          = effectBlocking(writing(byteIn))
         blockingRead:   ZIO[Blocking, Throwable, Exchange]      = effectBlocking(reading())
         writingStream:  ZStream[Blocking, Throwable, Unit]      = ZStream.fromEffect(blockingWrite)
         readingStream:  ZStream[Blocking, Throwable, Exchange]  = ZStream.fromEffect(blockingRead)
-        byteOut <- (writingStream *> readingStream).drainFork(input).chunkN(chunkSize)
+        byteOut <- (writingStream.drainFork(readingStream)).drainFork(input)
       } yield {
-        byteOut
+        byteIn
       }
 
-      s.flattenChunks
+      s
     }
 
   }

@@ -8,21 +8,29 @@ import zio.test._
 import zio.test.environment.TestEnvironment
 import zio.test.Assertion._
 import zio.test.TestAspect._
+import zio.duration._
 
 object LargePipeMainSpec extends DefaultRunnableSpec {
 
-  import PipeMain._
+  import LargePipeMain._
 
-  val n = 100
+  val n = 10000
   val original      = ("0123456789" * n) + "remainder"
   val originalBytes = original.map(_.toByte).toList
+
+  def toString(xs: List[Exchange]): String = xs.map(exchangeToString).mkString("")
+  def exchangeToString(x: Exchange): String = new String(x.toList.toArray)
 
   override def spec: ZSpec[TestEnvironment, Any] = {
     suite("efficiency of large streams")(
       testM ("should maintain integrity"){
-        val actual: ZStream[Clock with Blocking, Throwable, Exchange] = piping(ZStream.fromIterable(originalBytes), n, false)
-        assertM(actual.runCollect.map(x => new String(x.map(_.toByte).toArray)))(equalTo(original))
-      }
+        val actual = piping(ZStream.fromIterable(originalBytes), 1024, false)
+        for {
+          sameSize    <- assertM(actual.runCollect.map(x => toString(x).length))(equalTo(original.length))
+          sameContent <- assertM(actual.runCollect.map(toString))(equalTo(original))
+        } yield sameSize && sameContent
+
+      } @@ timeout(10 seconds)
     )
   }
 

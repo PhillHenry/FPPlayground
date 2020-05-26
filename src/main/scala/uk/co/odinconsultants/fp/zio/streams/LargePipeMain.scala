@@ -22,20 +22,19 @@ object LargePipeMain {
         out.flush()
       }
 
+      val arr = Array.ofDim[Byte](chunkSize)
       def reading(): Exchange = {
-        val arr = Array.ofDim[Byte](chunkSize)
         val x = in.read(arr)
         if (logging) println(s"reading ${arr.mkString(",")}")
         Chunk(arr.slice(0, x): _*)
       }
 
       val s = for {
-        byteIn <- input.chunkN(chunkSize).chunks
+        byteIn                                                  <- input.chunkN(chunkSize).chunks
         blockingWrite:  ZIO[Blocking, Throwable, Unit]          = effectBlocking(writing(byteIn))
         blockingRead:   ZIO[Blocking, Throwable, Exchange]      = effectBlocking(reading())
-        writingStream:  ZStream[Blocking, Throwable, Unit]      = ZStream.fromEffect(blockingWrite)
-        readingStream:  ZStream[Blocking, Throwable, Exchange]  = ZStream.fromEffect(blockingRead)
-        byteOut <- (writingStream *> readingStream).drainFork(input)
+        readWrite:      ZStream[Blocking, Throwable, Exchange]  = ZStream.fromEffect(blockingWrite *> blockingRead)
+        byteOut                                                 <- readWrite.drainFork(input)
       } yield {
         byteOut
       }

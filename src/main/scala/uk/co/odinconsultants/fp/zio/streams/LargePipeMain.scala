@@ -16,7 +16,7 @@ object LargePipeMain {
 
     ZStream.fromEffect(pipes).flatMap { case (in, out) =>
 
-      def writing(b: Chunk[Byte]): Unit = {
+      def writing(b: Exchange): Unit = {
         if (logging) println(s"writing $b")
         out.write(b.toArray)
         out.flush()

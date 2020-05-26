@@ -1,6 +1,7 @@
 package uk.co.odinconsultants.fp.zio.streams
 
 import uk.co.odinconsultants.fp.zio.streams.PipeMain._
+import uk.co.odinconsultants.fp.zio.streams.LargePipeMain._
 import zio.test.Assertion.equalTo
 import zio.test.TestAspect.timeout
 import zio.test.environment.{TestClock, TestEnvironment}
@@ -16,9 +17,9 @@ object NonBlockingPipeMainSpec extends DefaultRunnableSpec {
       testM("should be non blocking"){
         for {
           _ <- TestClock.adjust(10.seconds)
-          p <- piping(infiniteSlowStream).take(4).runCollect
+          p <- piping(infiniteSlowStream, 4, true).take(1).runCollect
         } yield {
-          assert(p.mkString(","))(equalTo(Array(0,1,2,3).mkString(",")))
+          assert(p(0).toArray.mkString(","))(equalTo(Array(0,1,2,3).mkString(",")))
         }
       } @@ timeout(10 seconds)
     )

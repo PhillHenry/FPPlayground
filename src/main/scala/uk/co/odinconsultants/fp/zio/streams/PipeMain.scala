@@ -52,38 +52,6 @@ object PipeMain extends App {
 
   type Exchange = Int
 
-  def piping(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5, logging: Boolean = true) = {
-
-    ZStream.fromEffect(pipes).flatMap { case (in, out) =>
-
-      def writing(b: Chunk[Byte]): Unit = {
-        if (logging) println(s"writing $b")
-        out.write(b.toArray)
-        out.flush()
-      }
-
-      def reading(): Exchange = {
-        val x = in.read()
-        if (logging) println(s"reading $x")
-        x
-      }
-
-      val s = for {
-        byteIn <- input.chunkN(chunkSize).chunks
-        blockingWrite:  ZIO[Blocking, Throwable, Unit]          = effectBlocking(writing(byteIn))
-        blockingRead:   ZIO[Blocking, Throwable, Exchange]      = effectBlocking(reading())
-        writingStream:  ZStream[Blocking, Throwable, Unit]      = ZStream.fromEffect(blockingWrite)
-        readingStream:  ZStream[Blocking, Throwable, Exchange]  = ZStream.fromEffect(blockingRead)
-        byteOut <- (writingStream.drainFork(readingStream)).drainFork(input)
-      } yield {
-        byteIn
-      }
-
-      s
-    }
-
-  }
-
   def reading(in: InputStream): ZIO[Blocking, Throwable, Int] = effectBlocking(in.read())
 
   def doPipe(inStream: InputStream, outStream: OutputStream): ZIO[Blocking, IOException, String] = for {

@@ -17,7 +17,7 @@ object PipeMainSpec extends DefaultRunnableSpec {
 
   import PipeMain._
 
-  val msg: String = "This is a test" //* 100
+  val msg: String = "This is a test" * 10000
   val bytes: Array[Byte] = msg.getBytes()
 
   override def spec: ZSpec[TestEnvironment, Any] = {
@@ -26,8 +26,9 @@ object PipeMainSpec extends DefaultRunnableSpec {
           val inStream  = new ByteArrayInputStream(bytes)
           val outStream = new ByteArrayOutputStream(bufferSize)
           val result: ZIO[Blocking, IOException, TestResult] = for {
-            p <- doPipe(inStream, outStream).fork
-            _ <- p.join
+            // fork/join or no fork/join makes no difference here as doPipe is synchronous
+            p <- doPipe(inStream, outStream) //.fork
+//            _ <- p.join
           } yield {
             assert(new String(outStream.toByteArray))(equalTo(msg))
           }

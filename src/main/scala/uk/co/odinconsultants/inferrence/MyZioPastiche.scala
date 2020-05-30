@@ -1,10 +1,8 @@
 package uk.co.odinconsultants.inferrence
 
 import izumi.reflect.Tags.Tag
-import zio.ZIO
 
 import scala.util.control.NoStackTrace
-
 
 case class UserId(x: Int)
 
@@ -12,14 +10,13 @@ case class User(id: UserId, name: String)
 
 class DBError extends NoStackTrace
 
-
 object MyZioPastiche {
 
   def main(args: Array[String]): Unit = {
     println(myGetUser(UserId(1)))
   }
 
-  type IO[T, U] = ZIO[Any, T, U]
+  type IO[T, U] = MyZio[Any, T, U]
 
   import MyTypeInference._
 
@@ -37,7 +34,7 @@ object MyZioPastiche {
 
 }
 
-//class MyZio[R, E, A]
+class MyZio[-R, +E, +A]
 
 final class MyDesugaredHas[A]
 
@@ -50,7 +47,7 @@ object MyDesugaredHas {
 
 object MyTypeInference {
 
-  final class MyRead[R, E, A](val k: R => ZIO[R, E, A]) {
+  final class MyRead[R, E, A](val k: R => MyZio[R, E, A]) {
     def tag = 13
   }
 
@@ -58,7 +55,7 @@ object MyTypeInference {
     new MyAccessMPartiallyApplied[R]
 
   final class MyAccessMPartiallyApplied[R](private val dummy: Boolean = true) extends AnyVal {
-    def apply[E, A](f: R => ZIO[R, E, A]): MyRead[R, E, A] =
+    def apply[E, A](f: R => MyZio[R, E, A]): MyRead[R, E, A] =
       new MyRead(f)
   }
 

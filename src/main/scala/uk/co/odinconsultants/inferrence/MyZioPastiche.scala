@@ -1,10 +1,25 @@
-package uk.co.odinconsultants.fp.zio.modules
+package uk.co.odinconsultants.inferrence
 
 import izumi.reflect.Tags.Tag
-import org.scalatest.{Matchers, WordSpec}
-import zio.{Has, IO, ZIO}
+import zio.ZIO
 
-class MyTypeInference extends WordSpec with Matchers {
+import scala.util.control.NoStackTrace
+
+
+case class UserId(x: Int)
+
+case class User(id: UserId, name: String)
+
+class DBError extends NoStackTrace
+
+
+object MyZioPastiche {
+
+  def main(args: Array[String]): Unit = {
+    println(myGetUser(UserId(1)))
+  }
+
+  type IO[T, U] = ZIO[Any, T, U]
 
   import MyTypeInference._
 
@@ -20,13 +35,10 @@ class MyTypeInference extends WordSpec with Matchers {
     MyTypeInference.accessM(_.get.getUser(userId))
   }
 
-  "Argument" should {
-    "be inferred in my code" in {
-      println(myGetUser(UserId(1)))
-    }
-  }
-
 }
+
+//class MyZio[R, E, A]
+
 final class MyDesugaredHas[A]
 
 object MyDesugaredHas {

@@ -50,17 +50,10 @@ object LargePipeMain {
         Chunk(arr.slice(0, x): _*)
       }
 
-      val s = for {
-        bytesIn                                                 <- input.chunkN(chunkSize).chunks
-        blockingWrite:  ZIO[Blocking, Throwable, Unit]          = effectBlocking(writing(bytesIn))
-        blockingRead:   ZIO[Blocking, Throwable, Exchange]      = effectBlocking(reading())
-        readWrite:      ZStream[Blocking, Throwable, Exchange]  = ZStream.fromEffect(blockingWrite *> blockingRead)
-        bytesOut                                                <- readWrite.drainFork(input)
-      } yield {
-        bytesOut
+      input.chunkN(chunkSize).chunks.flatMap { c =>
+        val effect = effectBlocking(writing(c)) *> effectBlocking(reading())
+        ZStream.fromEffect(effect)
       }
-
-      s
     }
 
   }

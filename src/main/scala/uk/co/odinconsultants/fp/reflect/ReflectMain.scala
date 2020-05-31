@@ -30,6 +30,19 @@ object ReflectMain {
     ctX
   }
 
+  import izumi.reflect.Tags.Tag
+  import izumi.reflect.Tags.TagK
+  import izumi.reflect.macrortti.{LTag, LightTypeTag}
+
+  def tagOf[T: LTag]: LightTypeTag = {
+    val x: LightTypeTag = LTag[T].tag
+
+    val args: List[LightTypeTag] = x.typeArgs
+    println("tagOf args = " + args.mkString(","))
+
+    x
+  }
+
   val w3 = Witness(3)
   type _3 = w3.T
 
@@ -42,6 +55,8 @@ object ReflectMain {
     println("\nRefined:")
 
     typeTagOf[List[_3]] // "No TypeTag available for List[_3]" if _3 is scoped to the fucntion
+
+    println("tagOf = " + tagOf[List[_3]])
   }
 
 }

@@ -9,6 +9,15 @@ import shapeless.Witness
 import shapeless.Witness.Aux
 
 import scala.reflect.runtime.universe._
+import izumi.reflect.Tags.Tag
+import izumi.reflect.Tags.TagK
+
+case class IdealMatrix[ROWS <: ExactInt : Tag, COLS  <: ExactInt]() {
+
+
+  def multiply[T <: ExactInt](x: Matrix2[COLS, T]): IdealMatrix[ROWS, T] = IdealMatrix[ROWS, T]()
+
+}
 
 case class Matrix2[ROWS <: ExactInt, COLS  <: ExactInt](nRows: ROWS, nCols: COLS) {
 
@@ -47,8 +56,10 @@ object MyMatrixMain {
     val _3x7: Matrix2[Exactly[W.`3`.T], Exactly[W.`7`.T]]   = Matrix2(3: Exactly[W.`3`.T], 7: Exactly[W.`7`.T])
     val _7x8: Matrix2[Exactly[W.`7`.T], Exactly[W.`8`.T]]   = Matrix2(7: Exactly[W.`7`.T], 8: Exactly[W.`8`.T])
     val _8x7: Matrix2[Exactly[W.`8`.T], Exactly[W.`7`.T]]   = Matrix2(8: Exactly[W.`8`.T], 7: Exactly[W.`7`.T])
+    val _7x9: Matrix2[Exactly[W.`8`.T], Exactly[W.`7`.T]]   = Matrix2(8, 7)
     _3x7.multiply(_7x8)
 //    _3x7.multiply(_8x7) // doesn't compile as expected
+    IdealMatrix[Exactly[W.`8`.T], Exactly[W.`7`.T]]()
   }
 
 }

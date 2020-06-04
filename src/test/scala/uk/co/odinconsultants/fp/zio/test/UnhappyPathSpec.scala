@@ -19,6 +19,12 @@ object UnhappyPathSpec
         result <- ZIO.fail("fail").run
       } yield assert(result)(fails(equalTo("fail")))
     }
+      ,
+    testM("Example of orDie") {
+      for {
+        result <- ZIO("hello").orDie
+      } yield assert(result)(equalTo("hello"))
+    }
   )
 }
 

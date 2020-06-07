@@ -3,10 +3,12 @@ package uk.co.odinconsultants.fp.zio.streams
 import java.io.IOException
 
 import uk.co.odinconsultants.fp.zio.streams.PipeMain.pipes
-import zio.{Chunk, ZIO}
+import zio.{Chunk, Queue, Schedule, URIO, ZIO, ZQueue}
 import zio.blocking.{Blocking, effectBlocking}
 import zio.clock.Clock
 import zio.stream.ZStream
+
+import scala.collection.mutable.ArrayBuffer
 
 /**
 Itamar Ravid 31/05/2020 at 9:29 AM
@@ -56,5 +58,24 @@ object LargePipeMain {
       }
     }
 
+  }
+
+  def piping2(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5, logging: Boolean = true): ZStream[Clock with Blocking, Throwable, Exchange] = {
+    ZStream.fromEffect(Queue.bounded[Chunk[Byte]](16)).flatMap { q =>
+      println("Queue created")
+      val put: ZStream[Clock, IOException, Boolean] = input.chunkN(chunkSize).chunks.flatMap { c =>
+        if (logging) println(s"Offering ${c.length} bytes...")
+        val offered = q.offer(c)
+        if (logging) println("Offered")
+        ZStream.fromEffect(offered)
+      }
+      val take: ZIO[Any, Nothing, Chunk[Byte]] = {
+        if (logging) println("Taking...")
+        val taken = q.take
+        if (logging) println(s"Taken")
+        taken
+      }
+      ZStream.fromEffect(take).repeat(Schedule.forever).drainFork(put)
+    }
   }
 }

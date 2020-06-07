@@ -1,5 +1,6 @@
 package uk.co.odinconsultants.fp.zio.streams
 
+import zio.{ZIO, stream}
 import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.stream.ZStream
@@ -22,8 +23,8 @@ object LargePipeMainSpec extends DefaultRunnableSpec {
   def exchangeToString(x: Exchange): String = new String(x.toList.toArray)
 
   override def spec: ZSpec[TestEnvironment, Any] = {
-    suite("efficiency of large streams")(
-      testM ("should maintain integrity"){
+    suite("Piping")(
+      testM ("piping with Java's PipedInputStream is fine but only for small chunk"){
         val actual = piping(ZStream.fromIterable(originalBytes), 1024, false)
         for {
           sameSize    <- assertM(actual.runCollect.map(x => toString(x).length))(equalTo(original.length))
@@ -31,6 +32,26 @@ object LargePipeMainSpec extends DefaultRunnableSpec {
         } yield sameSize && sameContent
 
       } @@ timeout(10 seconds)
+      ,
+      testM ("Large chunks jsut seem to hang"){
+        val actual = piping(ZStream.fromIterable(originalBytes), n/2, false)
+        for {
+          sameSize    <- assertM(actual.runCollect.map(x => toString(x).length))(equalTo(original.length))
+          sameContent <- assertM(actual.runCollect.map(toString))(equalTo(original))
+        } yield sameSize && sameContent
+
+      } @@ ignore
+      ,
+
+      testM ("Whereas piping large chunks with just ZIO mechanism works"){
+        val actual: ZIO[Clock with Blocking, Throwable, List[Exchange]] = piping2(ZStream.fromIterable(originalBytes), 1024, true).take((original.length / 1024) + 1).runCollect
+        for {
+          sameSize    <- assertM(actual.map(x => toString(x).length))(equalTo(original.length))
+          sameContent <- assertM(actual.map(toString))(equalTo(original))
+        } yield sameSize && sameContent
+
+      } @@ timeout(10 seconds)
+
     )
   }
 

@@ -41,11 +41,12 @@ one way
                                     c: C => F[D]
                                   ): Kleisli[OptionT[F, *], A, D] = {
 
-    def lift[X, Y] =
+    def lift[X, Y]: (X => F[Y]) => Kleisli[OptionT[F, *], X, Y] =
       Kleisli(_: X => F[Y]).mapK(OptionT.liftK)
 
     Kleisli { in: A =>
-      OptionT(a(in).pure[F])
+      val value: F[Option[B]] = a(in).pure[F]
+      OptionT(value)
     } >>> lift(b) >>> lift(c)
   }
 

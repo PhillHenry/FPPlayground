@@ -22,7 +22,7 @@ object UnhappyPathSpec
       ,
     testM("Example of orDie") {
       for {
-        result <- ZIO("hello").orDie
+        result <- ZIO(???).orDie
       } yield assert(result)(equalTo("hello"))
     }
   )

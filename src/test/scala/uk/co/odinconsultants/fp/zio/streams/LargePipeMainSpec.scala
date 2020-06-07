@@ -44,7 +44,7 @@ object LargePipeMainSpec extends DefaultRunnableSpec {
       ,
 
       testM ("Whereas piping large chunks with just ZIO mechanism works"){
-        val actual: ZIO[Clock with Blocking, Throwable, List[Exchange]] = piping2(ZStream.fromIterable(originalBytes), 1024, true).take((original.length / 1024) + 1).runCollect
+        val actual: ZIO[Clock with Blocking, Throwable, List[Exchange]] = piping2(ZStream.fromIterable(originalBytes), 1024, true).runCollect
         for {
           sameSize    <- assertM(actual.map(x => toString(x).length))(equalTo(original.length))
           sameContent <- assertM(actual.map(toString))(equalTo(original))

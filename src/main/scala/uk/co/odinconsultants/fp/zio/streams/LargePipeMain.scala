@@ -61,21 +61,27 @@ object LargePipeMain {
   }
 
   def piping2(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5, logging: Boolean = true): ZStream[Clock with Blocking, Throwable, Exchange] = {
-    ZStream.fromEffect(Queue.bounded[Chunk[Byte]](16)).flatMap { q =>
+    ZStream.fromEffect(ZQueue.bounded[Chunk[Byte]](16)).flatMap { q =>
       println("Queue created")
-      val put: ZStream[Clock, IOException, Boolean] = input.chunkN(chunkSize).chunks.flatMap { c =>
-        if (logging) println(s"Offering ${c.length} bytes...")
-        val offered = q.offer(c)
-        if (logging) println("Offered")
-        ZStream.fromEffect(offered)
-      }
+
       val take: ZIO[Any, Nothing, Chunk[Byte]] = {
         if (logging) println("Taking...")
         val taken = q.take
         if (logging) println(s"Taken")
         taken
       }
-      ZStream.fromEffect(take).repeat(Schedule.forever).drainFork(put)
+
+      def offer(c: Chunk[Byte]): ZIO[Any, Nothing, Boolean] = {
+        if (logging) println(s"Offering ${c.length} bytes...")
+        val offered = q.offer(c)
+        if (logging) println("Offered")
+        offered
+      }
+
+      input.chunkN(chunkSize).chunks.flatMap { c =>
+        ZStream.fromEffect(offer(c) *> take)
+      }
+
     }
   }
 }

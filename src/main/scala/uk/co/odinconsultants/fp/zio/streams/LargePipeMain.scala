@@ -6,9 +6,10 @@ import uk.co.odinconsultants.fp.zio.streams.PipeMain.pipes
 import zio.{Chunk, Queue, Schedule, URIO, ZIO, ZQueue}
 import zio.blocking.{Blocking, effectBlocking}
 import zio.clock.Clock
-import zio.stream.ZStream
+import zio.stream.{StreamEffectChunk, ZStream, ZStreamChunk}
 
 import scala.collection.mutable.ArrayBuffer
+import java.io.{InputStream, OutputStream}
 
 /**
 Itamar Ravid 31/05/2020 at 9:29 AM
@@ -35,8 +36,7 @@ object LargePipeMain {
 
   type Exchange = Chunk[Byte]
 
-  def piping(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5, logging: Boolean = true): ZStream[Clock with Blocking, Throwable, Exchange] = {
-
+  def pipingJavaIO(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5, logging: Boolean = true): ZStream[Clock with Blocking, Throwable, Exchange] =
     ZStream.fromEffect(pipes).flatMap { case (in, out) =>
 
       def writing(b: Exchange): Unit = {
@@ -58,9 +58,7 @@ object LargePipeMain {
       }
     }
 
-  }
-
-  def piping2(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5, logging: Boolean = true): ZStream[Clock with Blocking, Throwable, Exchange] = {
+  def pipingZioQueue(input: ZStream[Clock, IOException, Byte], chunkSize: Int = 5, logging: Boolean = true): ZStream[Clock with Blocking, Throwable, Exchange] = {
     ZStream.fromEffect(ZQueue.bounded[Chunk[Byte]](16)).flatMap { q =>
       println("Queue created")
 
@@ -82,6 +80,19 @@ object LargePipeMain {
         ZStream.fromEffect(offer(c) *> take)
       }
 
+    }
+  }
+
+  def pipeFrom(outputStream: OutputStream, chunkSize: Int) = {
+    val read = ZIO {
+      outputStream
+    }
+  }
+
+  def streamTermination(input: InputStream, chunkSize: Int) = {
+    val chunked: ZStreamChunk[Any, IOException, Byte] = ZStream.fromInputStream(input).chunkN(chunkSize)
+    chunked.chunks.flatMap { chunk =>
+      ???
     }
   }
 }

@@ -25,7 +25,7 @@ object LargePipeMainSpec extends DefaultRunnableSpec {
   override def spec: ZSpec[TestEnvironment, Any] = {
     suite("Piping")(
       testM ("piping with Java's PipedInputStream is fine but only for small chunk"){
-        val actual = piping(ZStream.fromIterable(originalBytes), 1024, false)
+        val actual = pipingJavaIO(ZStream.fromIterable(originalBytes), 1024, false)
         for {
           sameSize    <- assertM(actual.runCollect.map(x => toString(x).length))(equalTo(original.length))
           sameContent <- assertM(actual.runCollect.map(toString))(equalTo(original))
@@ -34,7 +34,7 @@ object LargePipeMainSpec extends DefaultRunnableSpec {
       } @@ timeout(10 seconds)
       ,
       testM ("Large chunks jsut seem to hang"){
-        val actual = piping(ZStream.fromIterable(originalBytes), n/2, false)
+        val actual = pipingJavaIO(ZStream.fromIterable(originalBytes), n/2, false)
         for {
           sameSize    <- assertM(actual.runCollect.map(x => toString(x).length))(equalTo(original.length))
           sameContent <- assertM(actual.runCollect.map(toString))(equalTo(original))
@@ -43,7 +43,7 @@ object LargePipeMainSpec extends DefaultRunnableSpec {
       } @@ ignore
       ,
       testM ("Whereas piping large chunks with just ZIO mechanism works"){
-        val actual: ZIO[Clock with Blocking, Throwable, List[Exchange]] = piping2(ZStream.fromIterable(originalBytes), 1024, true).runCollect
+        val actual: ZIO[Clock with Blocking, Throwable, List[Exchange]] = pipingZioQueue(ZStream.fromIterable(originalBytes), 1024, true).runCollect
         for {
           sameSize    <- assertM(actual.map(x => toString(x).length))(equalTo(original.length))
           sameContent <- assertM(actual.map(toString))(equalTo(original))
@@ -52,7 +52,7 @@ object LargePipeMainSpec extends DefaultRunnableSpec {
       } @@ timeout(10 seconds)
       ,
       testM ("Whereas piping large chunks with just ZIO mechanism works"){
-        val actual: ZIO[Clock with Blocking, Throwable, List[Exchange]] = piping2(ZStream.fromIterable(originalBytes), (original.length / 2) + 1, true).runCollect
+        val actual: ZIO[Clock with Blocking, Throwable, List[Exchange]] = pipingZioQueue(ZStream.fromIterable(originalBytes), (original.length / 2) + 1, true).runCollect
         for {
           sameSize    <- assertM(actual.map(x => toString(x).length))(equalTo(original.length))
           sameContent <- assertM(actual.map(toString))(equalTo(original))

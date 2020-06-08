@@ -17,7 +17,7 @@ object NonBlockingPipeMainSpec extends DefaultRunnableSpec {
       testM("should be non blocking"){
         for {
           _ <- TestClock.adjust(10.seconds)
-          p <- piping(infiniteSlowStream, 4, true).take(1).runCollect
+          p <- pipingJavaIO(infiniteSlowStream, 4, true).take(1).runCollect
         } yield {
           assert(p(0).toArray.mkString(","))(equalTo(Array(0,1,2,3).mkString(",")))
         }

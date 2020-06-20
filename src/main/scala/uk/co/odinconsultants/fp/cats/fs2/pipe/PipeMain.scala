@@ -45,7 +45,9 @@ object PipeMain extends IOApp {
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
-    val printEach:  Stream[IO, Int] => Stream[IO, Unit] = { _.map(x => IO { println(x) }) }
+    val printEffect: Int => IO[Unit] = x => IO { println(x) }
+
+    val printEach:  Stream[IO, Int] => Stream[IO, Unit] = { _.flatMap(x => Stream.eval(printEffect(x))) }
 
     val input:      Stream[IO, Int]   = Stream(1,2,3,4,5,6,7,8)
     val piped = pipeNonEmpty2(printEach)

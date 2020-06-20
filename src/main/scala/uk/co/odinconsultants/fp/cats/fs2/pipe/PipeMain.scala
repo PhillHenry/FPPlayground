@@ -1,7 +1,7 @@
 package uk.co.odinconsultants.fp.cats.fs2.pipe
 
 import cats.effect.{Concurrent, ExitCode, IO, IOApp}
-import fs2.{Chunk, Pipe, Stream}
+import fs2.{Chunk, Pipe, Pure, Stream}
 import cats.implicits._
 import fs2.concurrent.Queue
 
@@ -45,6 +45,13 @@ object PipeMain extends IOApp {
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
-    ???
+    val printEach:  Stream[IO, Int] => Stream[IO, Unit] = { _.map(x => IO { println(x) }) }
+
+    val input:      Stream[IO, Int]   = Stream(1,2,3,4,5,6,7,8)
+    val piped = pipeNonEmpty2(printEach)
+
+    val stream = piped(input)
+
+    stream.compile.toList.as(ExitCode.Success)
   }
 }

@@ -41,12 +41,19 @@ object UnhappyPathSpec
       } yield assert(result)(equalTo(List(exceptionA, exceptionB)))
     }
     ,
-    testM("aggregating exceptions") {
+    testM("aggregating exceptions (io.run)") {
       val io: IO[String, List[Exception]] = ZIO.collectAll(kvs.map { case (k, v) => ZIO.fromEither(v).flip }.toList)
       for {
         result <- io.run
       } yield assert(result)(fails(equalTo(stringC)))
     }
+    ,
+    testM("aggregating exceptions") {
+      val io: IO[String, List[Exception]] = ZIO.collectAll(kvs.map { case (k, v) => ZIO.fromEither(v).flip }.toList)
+      for {
+        result <- io
+      } yield assert(result)(equalTo(List(new Exception(stringC))))
+    } @@ ignore
     ,
     testM("Example of orDie") {
       for {

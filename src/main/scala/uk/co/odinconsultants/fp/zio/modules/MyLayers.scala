@@ -93,6 +93,7 @@ object MyLayers extends App {
 
     val resultExit: ZIO[Any, DBError, Int] = result *> exit
 
-    resultExit.catchAll(_ => exit)
+    val afterCatch: ZIO[Any, Nothing, Int] = resultExit.catchAll(_ => exit)
+    afterCatch
   }
 }

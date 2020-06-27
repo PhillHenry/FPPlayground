@@ -1,5 +1,5 @@
 package uk.co.odinconsultants.fp.zio.types
-import zio.{Task, ZEnv, ZIO}
+import zio.{IO, Task, ZEnv, ZIO}
 
 object MyREA extends zio.App {
 
@@ -15,11 +15,12 @@ object MyREA extends zio.App {
       b <- zioB
     } yield a + b
 
-    val x: ZIO[Any, Throwable, Unit] = ZIO(println("Hello"))
+    val R: MyA with MyB = new MyA with MyB {}
+    val x: IO[Throwable, String] = result.provide(R)
 
-    val myEnv: ZIO[Any, Throwable, MyA with MyB] = ZIO(new MyA with MyB{})
+    val myEnv:      ZIO[Any, Throwable, MyA with MyB] = ZIO(R)
+    val massaged:   ZIO[Any, Throwable, String]       = result.compose(myEnv)
 
-    val massaged: ZIO[MyB with MyA, Throwable, String] = (zioA *> zioB)
-    massaged.compose(myEnv).fold(_ => 1, _ => 0)
+    massaged.fold(_ => 1, _ => 0)
   }
 }

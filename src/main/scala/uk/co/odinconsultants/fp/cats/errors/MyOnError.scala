@@ -18,9 +18,14 @@ object MyOnError extends IOApp {
     d <- o4
   } yield a + b + c + d
 
-  val explodingIO = for {
+  val onErrorUnhappyPath = for {
     a <- o1
     b <- badBoy.onError { case x => IO(println(s"Error: $x")) }
+  } yield a + b
+
+  val unhappyPath = for {
+    a <- o1
+    b <- badBoy
   } yield a + b
 
   override def run(args: List[String]): IO[ExitCode] = {

@@ -13,15 +13,20 @@ class MyOnErrorSpec extends WordSpec with Matchers {
   }
 
   "unhappy path" should {
+    "throw exception upon unsafeRun event with onError" in {
+      assertThrows[ArithmeticException] {
+        onErrorUnhappyPath.unsafeRunSync()
+      }
+    }
     "throw exception upon unsafeRun" in {
       assertThrows[ArithmeticException] {
-        explodingIO.unsafeRunSync()
+        unhappyPath.unsafeRunSync()
       }
     }
     "be attempted" in {
-      explodingIO.attempt.unsafeRunSync() match {
+      onErrorUnhappyPath.attempt.unsafeRunSync() match {
         case Left(x: ArithmeticException) => // expected
-        case x => fail(s"Was note expecting $x")
+        case x                            => fail(s"Was note expecting $x")
       }
     }
   }

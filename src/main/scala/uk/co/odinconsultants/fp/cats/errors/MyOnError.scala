@@ -20,12 +20,17 @@ object MyOnError extends IOApp {
 
   val onErrorUnhappyPath = for {
     a <- o1
-    b <- badBoy.onError { case x => IO(println(s"Error: $x")) }
+    b <- badBoy.onError { case x => IO(println(s"Error: $x")) } // onError is always A => IO[Unit]
   } yield a + b
 
   val unhappyPath = for {
     a <- o1
     b <- badBoy
+  } yield a + b
+
+  val handledErrors: IO[Int] = for {
+    a <- badBoy.handleErrorWith(_ => o1)
+    b <- badBoy.orElse(o2)
   } yield a + b
 
   override def run(args: List[String]): IO[ExitCode] = {

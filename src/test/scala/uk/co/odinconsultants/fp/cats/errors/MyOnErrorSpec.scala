@@ -29,6 +29,9 @@ class MyOnErrorSpec extends WordSpec with Matchers {
         case x                            => fail(s"Was note expecting $x")
       }
     }
+    "handled in many ways" in {
+      handledErrors.unsafeRunSync() shouldBe 3
+    }
   }
 
 }

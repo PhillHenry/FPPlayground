@@ -2,6 +2,7 @@ package uk.co.odinconsultants.fp.zio.fibres
 
 import zio.duration._
 import zio._
+import zio.blocking._
 
 /**
 kamil06/30/2020
@@ -19,13 +20,14 @@ object Example extends zio.App {
     } yield 0
 
   val myProgram =
+//    effectBlocking(println("Starting"))
     ZIO
       .effect(println("Starting"))
       .map { _ =>
         println("Starting some expensive compution")
         val start = System.currentTimeMillis()
         Thread.sleep(2000)
-        println(s"Finishing with expensive computation in ${System.currentTimeMillis() - start} ms")
+        println(s"Finishing with expensive computation in ${System.currentTimeMillis() - start} ms. Interrupted? ${Thread.currentThread().isInterrupted()}")
       }
       .map(_ => println("I shouldn't be doing effects in map but for illutrative purposes"))
 }

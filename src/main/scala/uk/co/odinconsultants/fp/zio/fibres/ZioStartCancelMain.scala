@@ -1,6 +1,7 @@
 package uk.co.odinconsultants.fp.zio.fibres
 
 import zio.{URIO, ZEnv, _}
+import zio.blocking._
 
 object ZioStartCancelMain extends zio.App {
 
@@ -15,14 +16,15 @@ object ZioStartCancelMain extends zio.App {
   }
 
   def run(args: List[String]): URIO[ZEnv, Int] = {
-    val startCancel: ZIO[Any, Nothing, UIO[Fiber.Status]] = for {
-      z <- sleeping.ensuring(guarantee).fork
-      _ <- z.interrupt //join.catchAll(e => URIO(e.printStackTrace()))
+    val startCancel = for {
+      z <- effectBlockingCancelable(sleeping)(guarantee)
+      f <- z.fork
+      _ <- f.interrupt
     } yield {
-      z.status
+      "done"
     }
 
-    startCancel.map(_ => 0)
+    startCancel.catchAll(e => URIO(e.printStackTrace())).map(_ => 0)
   }
 
 }

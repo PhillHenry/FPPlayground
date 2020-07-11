@@ -1,7 +1,6 @@
 package uk.co.odinconsultants.fp.zio.fibres
 
-import zio.{URIO, ZEnv}
-import zio._
+import zio.{URIO, ZEnv, _}
 
 object ZioStartCancelMain extends zio.App {
 
@@ -11,18 +10,19 @@ object ZioStartCancelMain extends zio.App {
     println("Finished")
   }
 
-  val guarantee = ZIO {
+  val guarantee: URIO[Any, Unit] = URIO {
     println("Guarantee ran")
   }
 
   def run(args: List[String]): URIO[ZEnv, Int] = {
-    val startCancel = for {
-      z <- sleeping.fork.flatMap(_.interrupt)
+    val startCancel: ZIO[Any, Nothing, UIO[Fiber.Status]] = for {
+      z <- sleeping.ensuring(guarantee).fork
+      _ <- z.interrupt //join.catchAll(e => URIO(e.printStackTrace()))
     } yield {
-      z.interrupted
+      z.status
     }
 
-    startCancel.map(if (_) 1 else 0)
+    startCancel.map(_ => 0)
   }
 
 }

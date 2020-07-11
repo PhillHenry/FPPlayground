@@ -11,13 +11,17 @@ import cats.implicits._
 
 object ServerSocketMain extends IOApp {
 
-  val address = new InetSocketAddress("127.0.0.1", 0)
-
   override def run(args: List[String]): IO[ExitCode] = {
-    client[IO].as(ExitCode.Success)
+    val address = new InetSocketAddress("127.0.0.1", 8097)
+    IO {
+      println(address)
+    } >> client[IO](address).as(ExitCode.Success)
   }
 
-  def client[F[_]: Concurrent: ContextShift: Timer]: F[Unit] =
+  /**
+   * @see https://fs2.io/io.html
+   */
+  def client[F[_]: Concurrent: ContextShift: Timer](address: InetSocketAddress): F[Unit] =
     Blocker[F].use { blocker =>
       SocketGroup[F](blocker).use { socketGroup =>
         socketGroup.server(address).map { connection =>
@@ -32,7 +36,7 @@ object ServerSocketMain extends IOApp {
               .onFinalize(socket.endOfOutput)
           }
         }.parJoin(50)
-          .interruptAfter(10.minutes).compile.drain
+          .interruptAfter(1.minutes).compile.drain
       }
     }
 }

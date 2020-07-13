@@ -5,7 +5,11 @@ import zio.blocking._
 
 object ZioStartCancelMain extends zio.App {
 
-  val sleeping = ZIO {
+  val sleepingZIO = ZIO {
+    sleeping
+  }
+
+  private def sleeping = {
     println("About to sleep...")
     Thread.sleep(1000L)
     println("Finished")
@@ -16,15 +20,15 @@ object ZioStartCancelMain extends zio.App {
   }
 
   def run(args: List[String]): URIO[ZEnv, Int] = {
-    val startCancel = for {
-      z <- effectBlockingCancelable(sleeping)(guarantee)
+    val z = effectBlockingCancelable(sleeping)(guarantee)
+    val startCancel: ZIO[Blocking, Nothing, String] = for {
       f <- z.fork
       _ <- f.interrupt
     } yield {
       "done"
     }
 
-    startCancel.catchAll(e => URIO(e.printStackTrace())).map(_ => 0)
+    startCancel.map(_ => 0)
   }
 
 }

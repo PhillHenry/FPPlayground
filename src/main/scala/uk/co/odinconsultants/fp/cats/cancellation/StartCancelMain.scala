@@ -8,9 +8,9 @@ object StartCancelMain extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
     val result = for {
-      f <- (sleeping >> sleeping).start
+      f <- (sleeping >> sleeping >> sleeping).start
       _ <- f.cancel
-      _ <- IO { Thread.sleep(1500) }
+      _ <- f.join
     } yield ()
 
     result.map(_ => ExitCode.Success)

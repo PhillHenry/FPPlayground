@@ -1,6 +1,7 @@
 package uk.co.odinconsultants.fp.cats.cancellation
 
 import cats.effect.concurrent.Deferred
+import cats.effect.syntax.all._
 import cats.effect.{Concurrent, ExitCode, IO, IOApp, Resource}
 import cats.implicits._
 
@@ -24,12 +25,10 @@ import scala.concurrent.duration._
  * @aleksandersumowski this should work
  */
 object MultiRace extends IOApp {
-
-  type F[A] = IO[A]
-
   def run(args: List[String]): IO[ExitCode] = {
-    def multiRace[A](fas: List[F[A]]): F[A] = {
-      def spawn(fa: F[_]): Resource[F, Unit] =
+
+    def multiRace[F[_]: Concurrent, A](fas: List[F[A]]): F[A] = {
+      def spawn[B](fa: F[B]): Resource[F, Unit] =
         Resource.make(fa.start)(_.cancel).void
 
       def finish(fa: F[A], d: Deferred[F, Either[Throwable, A]]): F[Unit] =

@@ -9,20 +9,13 @@ import scala.concurrent.duration._
 
 /**
  * Aleksander Sumowski @aleksandersumowski 12:34
- * hi all,
- * what would be a good way to extend IO.race to more then 2 tasks?
+ * hi all, what would be a good way to extend IO.race to more then 2 tasks?
  *
  * Fabio Labella @SystemFw 12:48
+ * do they all return the same thing?  things of the same type I mean
  *
- * @aleksandersumowski do they all return the same thing?
- *                     things of the same type I mean
- *
- *                     Aleksander Sumowski @aleksandersumowski 12:48
- *                     yes
- *                     This message was deleted
- *
- *                     Fabio Labella @SystemFw 13:04
- * @aleksandersumowski this should work
+ * Aleksander Sumowski @aleksandersumowski 12:48
+ * yes
  */
 object MultiRace extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {

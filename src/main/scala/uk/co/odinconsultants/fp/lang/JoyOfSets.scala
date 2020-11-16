@@ -1,15 +1,27 @@
 package uk.co.odinconsultants.fp.lang
 
+import java.util
+
+import scala.collection.mutable
+
 object JoyOfSets {
 
   type Permutations[T] = Seq[Seq[T]]
 
-  def viaSet[T](xs: Permutations[T]): Permutations[T] = xs.map { xs =>
-    xs.toSet.toList
+  def viaSet[T](xs: Permutations[T]) = xs.map { xs =>
+    import scala.collection.JavaConverters._
+    val asSet = new util.HashSet[T]()
+    xs.foreach( x => asSet.add(x) )
+    val jList = new util.ArrayList[T](asSet)
+    jList.asScala.toList
+  }
+
+  class MyIntWrapper(x: Int) {
+    override def toString: String = x.toString
   }
 
   def main(args: Array[String]): Unit = {
-    val vals          = (1 to 6)
+    val vals          = (1 to 7).map(new MyIntWrapper(_))
     val permutations  = vals.permutations.toList
     val toSets        = viaSet(permutations)
     println(s"Number of unique permutations        = ${permutations.toSet.size}")

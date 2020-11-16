@@ -8,12 +8,10 @@ object JoyOfSets {
 
   type Permutations[T] = Seq[Seq[T]]
 
-  def viaSet[T](xs: Permutations[T]) = xs.map { xs =>
-    import scala.collection.JavaConverters._
+  def viaSet[T](xs: Permutations[T]):  Permutations[T] = xs.map { xs =>
     val asSet = scala.collection.mutable.Set[T]()
     xs.foreach( x => asSet.add(x) )
-    val jList = new util.ArrayList[T](asSet.asJava)
-    jList.asScala.toList
+    asSet.toList
   }
 
   class MyIntWrapper(x: Int) {

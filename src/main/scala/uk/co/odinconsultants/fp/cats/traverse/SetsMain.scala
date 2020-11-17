@@ -1,6 +1,6 @@
 package uk.co.odinconsultants.fp.cats.traverse
 
-import cats.CommutativeApplicative
+import cats.{Applicative, CommutativeApplicative}
 import cats.implicits._
 
 /**
@@ -9,18 +9,11 @@ import cats.implicits._
 object SetsMain {
 
   val commutativeApplicativeList = new CommutativeApplicative[List] {
-    override def pure[A](x: A): List[A] = {
-      println(s"pure $x")
-      List(x)
-    }
+    override def pure[A](x: A): List[A]
+      = implicitly[Applicative[List]].pure(x)
 
-    override def ap[A, B](ff: List[A => B])(fa: List[A]): List[B] = for {
-      f <- ff
-      a <- fa
-    } yield {
-      println(s"ap $a")
-      f(a)
-    }
+    override def ap[A, B](ff: List[A => B])(fa: List[A]): List[B]
+      = implicitly[Applicative[List]].ap(ff)(fa)
   }
 
   def main(args: Array[String]): Unit = {

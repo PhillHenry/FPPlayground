@@ -110,6 +110,11 @@
     </dependency>
     <dependency>
       <groupId>org.typelevel</groupId>
+      <artifactId>cats-collections-core_${scala.compat.version}</artifactId>
+      <version>0.9.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.typelevel</groupId>
       <artifactId>cats-laws_${scala.compat.version}</artifactId>
       <version>${cats.version}</version>
     </dependency>

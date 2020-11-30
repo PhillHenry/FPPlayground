@@ -29,6 +29,22 @@ import fs2._
  *
  * @Daenyth @SystemFw I dug further into my 'deadlock' and it turns out I'm running out of heap. I increased the heap and it took longer to grind to a halt. I then tested Stream(streams: _*).parJoinUnbounded vs SortMerge.sortMerge(streams). The former works fine while the latter gradually runs out of heap. @johnynek helpfully shared the SortMerge gist on this forum a while back and it works great apart from the heap issue.
  *          Is this behaviour expected? Any thoughts on why the sortMerge gradually eats up the heap?
+ *
+ * Fabio Labella @SystemFw 13:53
+ * (I suppose this property is called trampolining)
+ *
+ * Trampolining is a different thing, but thankfully it isn't relevant here (it's got to do with stack safety, whereas here we're talking about the heap). The problem is that yield adds an additional map
+ *
+ * for {
+ * t <- thing
+ * r <- recursiveCall
+ * } yield r
+ * you're adding that r.map(result => result)
+ * all those map calls accumulate
+ * whereas thing.flatMap(... recursiveCall) does not do that
+ *
+ *
+ *
  */
 object ParallelStreamsTest extends IOApp {
 

@@ -25,7 +25,17 @@ object TestClockFibersSpec extends DefaultRunnableSpec {
    * But if it adjusts before the sleep?
    * luis3m11/28/2020
    * @mojo I was wrong it does get stuck if you adjust first, anyway I think it's not supposed to adjust first because
-   *      a fiber is a running computation. It should sleep first always in that particular example
+   * a fiber is a running computation. It should sleep first always in that particular example
+   * luis3m11/28/2020
+   * @mojo which ZIO version are you using?
+   * mojo11/28/2020
+   * 1.0.3
+   * luis3m11/28/2020
+   * @mojo it's strange, after downgrading to 1.0.0 I'm not able to get it to be stuck.
+   * mojo11/28/2020
+   * Funny if this is a bug, I still don't understand why the fiber should run first, is this a given in ZIO?
+   * aartigao replied to mojo11/28/2020
+   * It's definitively possible. Forking afaik means scheduling execution in another Fiber, thus it's possible to hit adjust before sleep
    */
   override def spec: ZSpec[_root_.zio.test.environment.TestEnvironment, Any] = suite("Does/should this deadlock") (
     testM("One can control time as he see fit") {

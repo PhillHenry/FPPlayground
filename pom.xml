@@ -186,8 +186,6 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>src/main/scala</sourceDirectory>
-    <testSourceDirectory>src/test/scala</testSourceDirectory>
     <plugins>
       <plugin>
         <!-- see http://davidb.github.com/scala-maven-plugin -->
@@ -232,6 +230,14 @@
             <include>**/*Spec.*</include>
             <include>**/*Suite.*</include>
           </includes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>7</source>
+          <target>7</target>
         </configuration>
       </plugin>
     </plugins>

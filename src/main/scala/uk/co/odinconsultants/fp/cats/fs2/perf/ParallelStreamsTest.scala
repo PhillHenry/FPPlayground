@@ -43,7 +43,19 @@ import fs2._
  * all those map calls accumulate
  * whereas thing.flatMap(... recursiveCall) does not do that
  *
+ * Artem Nikiforov @nikiforo 14:02
+ * maps accumulate only till next flatMap is executed? Thus, heap doesn't really leak, it's just full of immutable references that can't be collected before the next flatMap is executed?
+ * ohhh... map is triggered after flatMap
+ * wow
+ * The problem is in desugaring yield into map after the last <-
+ * Have I understood you correctly?
  *
+ * Fabio Labella @SystemFw 14:07
+ * yes, exactly
+ * better-monadic-for doesn't do that, and therefore it fixes the problem
+ * definitely a gotcha
+ * personally I've just developed the habit of not using for with Pull
+ * given that they tend to have a recursive structure
  *
  */
 object ParallelStreamsTest extends IOApp {

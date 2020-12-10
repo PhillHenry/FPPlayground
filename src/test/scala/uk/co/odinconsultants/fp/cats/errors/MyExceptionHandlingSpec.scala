@@ -3,7 +3,7 @@ package uk.co.odinconsultants.fp.cats.errors
 import cats.effect.IO
 import org.scalatest.{Matchers, WordSpec}
 
-class MyExceptionHandling extends WordSpec with Matchers {
+class MyExceptionHandlingSpec extends WordSpec with Matchers {
 
   case class MyDomain(x: Int, y: String)
 

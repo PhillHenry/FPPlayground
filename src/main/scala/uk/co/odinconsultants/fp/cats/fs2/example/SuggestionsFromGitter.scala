@@ -55,7 +55,7 @@ I'm guessing this could be achieved by setting an arbitrarily high count for gro
       .using(consumerSettings)
       .evalTap(_.subscribeTo("test2"))
       .evalTap(consumer => IO(consumer.toString).void)
-      .evalMap(IO.sleep(3.seconds).as) // sleep a bit to trigger potential race condition with _.stream
+      .evalMap(x => IO.sleep(3.seconds).as(x)) // sleep a bit to trigger potential race condition with _.stream
       .flatMap(_.stream)
       .map(committable => committable.record.key -> committable.record.value)
       .interruptAfter(10.seconds)

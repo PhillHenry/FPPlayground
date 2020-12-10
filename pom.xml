@@ -121,7 +121,7 @@
     <dependency>
       <groupId>org.typelevel</groupId>
       <artifactId>cats-effect-laws_${scala.compat.version}</artifactId>
-      <version>${cats.version.old}</version>
+      <version>${cats.version}</version>
     </dependency>
     <dependency>
       <groupId>org.typelevel</groupId>
@@ -141,7 +141,7 @@
     <dependency>
       <groupId>org.typelevel</groupId>
       <artifactId>cats-effect_${scala.compat.version}</artifactId>
-      <version>${cats.version.old}</version>
+      <version>${cats.version}</version>
     </dependency>
     <dependency>
       <groupId>co.fs2</groupId>

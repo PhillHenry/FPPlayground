@@ -5,7 +5,6 @@ import org.scalatest.{Matchers, WordSpec}
 
 class ExceptionsInCatchesSpec extends WordSpec with Matchers {
 
-
   val input                           = 1
   val happyPathIO:  IO[Int]           = IO.pure(input)
 
@@ -17,26 +16,28 @@ class ExceptionsInCatchesSpec extends WordSpec with Matchers {
         releaseBarfs.use(x => IO { println(s"Success with $x")}).unsafeRunSync()
       }
       caught.getMessage shouldEqual releaseErrorMessage(input)
+      caught.getSuppressed should be (empty)
     }
   }
 
 
   "Try fails and so does finally" should {
     val releaseBarfs: Resource[IO, Int] = resourceBlowsUpOnRelease(happyPathIO)
-    "be managed" in {
+    "give the 'use'' error abd suppress the 'close' error" in {
       val caught = intercept[Exception] {
         releaseBarfs.use(x => IO { throw new Exception(useErrorMessage(x))}).unsafeRunSync()
       }
       caught.getMessage shouldEqual useErrorMessage(input)
+      caught.getSuppressed should be (empty)
     }
   }
-
-  private def useErrorMessage(x: Int) = s"Use failure with $x"
 
   private def resourceBlowsUpOnRelease(inputIO: IO[Int]): Resource[IO, Int] =
     Resource.make(inputIO)(x => IO {
       throw new Exception(releaseErrorMessage(x))
     })
+
+  private def useErrorMessage(x: Int) = s"Use failure with $x"
 
   private def releaseErrorMessage(x: Int) = s"releasing $x"
 }

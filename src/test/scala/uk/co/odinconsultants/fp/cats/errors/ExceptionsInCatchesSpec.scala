@@ -25,15 +25,17 @@ class ExceptionsInCatchesSpec extends WordSpec with Matchers {
     }
   }
 
-  "'use' and 'release' failing" should {
+  "'make' succeeds but 'use' and 'release' failing" should {
     "give the 'use' error and suppress the 'release' error" in {
-      expectUseErrorMessageForUnsafe(releaseBarfs).getMessage shouldEqual useErrorMessage(input)
+      val caught: Exception = expectUseErrorMessageWhen(releaseBarfs)
+      caught.getMessage shouldEqual useErrorMessage(input)
     }
   }
 
-  "'use' and 'make' and 'release' failing" should {
+  "'use' and 'make' and 'release' are all failing" should {
     "give the 'use' error and suppress the 'release' error" in {
-      expectUseErrorMessageForUnsafe(makeAndReleaseBarfs).getMessage shouldEqual makeErrorMessage
+      val caught: Exception = expectUseErrorMessageWhen(makeAndReleaseBarfs)
+      caught.getMessage shouldEqual makeErrorMessage
     }
   }
 
@@ -47,7 +49,7 @@ class ExceptionsInCatchesSpec extends WordSpec with Matchers {
     caught
   }
 
-  def expectUseErrorMessageForUnsafe(resource: Resource[IO, Int]): Exception = {
+  def expectUseErrorMessageWhen(resource: Resource[IO, Int]): Exception = {
     val caught = intercept[Exception] {
       resource.use(unhappyPathIO).unsafeRunSync()
     }

@@ -21,7 +21,7 @@
     <scala.version>2.12.10</scala.version>
     <scala.compat.version>2.12</scala.compat.version>
     <scalaz.version>7.2.14</scalaz.version>
-    <cats.version>2.2.0-RC1</cats.version>
+    <cats.version>2.3.0</cats.version>
     <cats.version.old>2.0.0</cats.version.old>
     <zio.version>1.0.0-RC18-2</zio.version>
   </properties>

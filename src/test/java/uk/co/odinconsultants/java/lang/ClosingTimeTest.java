@@ -1,13 +1,9 @@
 package uk.co.odinconsultants.java.lang;
 
-import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Test;
 
-import java.lang.AutoCloseable;
-
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class ClosingTimeTest {
 

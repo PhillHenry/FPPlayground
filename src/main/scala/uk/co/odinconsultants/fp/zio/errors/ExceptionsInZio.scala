@@ -37,6 +37,6 @@ object ExceptionsInZio extends zio.App {
       case Right(result) => result
     }
 
-    x.flatMap { msg => printAndReturn(s"finished politely w/: $msg") }.exitCode
+    x.flatMap { msg => printAndReturn(s"finished politely w/: $msg") }.map(_ => 0)
   }
 }

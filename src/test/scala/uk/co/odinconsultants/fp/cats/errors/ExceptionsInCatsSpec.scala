@@ -3,7 +3,9 @@ package uk.co.odinconsultants.fp.cats.errors
 import cats.effect.{IO, Resource}
 import org.scalatest.{Matchers, WordSpec}
 
-class ExceptionsInCatchesSpec extends WordSpec with Matchers {
+class ExceptionsInCatsSpec extends WordSpec with Matchers {
+
+  import ExceptionsInCats._
 
   val input                                     = 1
   val happyPathIO:            IO[Int]           = IO.pure(input)
@@ -57,14 +59,8 @@ class ExceptionsInCatchesSpec extends WordSpec with Matchers {
     caught
   }
 
-  private def resourceBlowsUpOnRelease(inputIO: IO[Int]): Resource[IO, Int] =
-    Resource.make(inputIO)(x => IO {
-      throw new Exception(releaseErrorMessage(x))
-    })
+  def useErrorMessage(x: Int) = s"Use failure with $x"
 
-  private def useErrorMessage(x: Int) = s"Use failure with $x"
+  val makeErrorMessage = s"make failing"
 
-  private def releaseErrorMessage(x: Int) = s"release failing for $x"
-
-  private val makeErrorMessage = s"make failing"
 }

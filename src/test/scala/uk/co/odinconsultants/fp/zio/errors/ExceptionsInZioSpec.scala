@@ -6,9 +6,9 @@ import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, testM, _}
 import zio.test.TestAspect._
 
-object ExceptionsInCatchesSpec extends DefaultRunnableSpec {
+object ExceptionsInZioSpec extends DefaultRunnableSpec {
 
-  import ExceptionsInCatches._
+  import ExceptionsInZio._
 
   override def spec: ZSpec[TestEnvironment, Any] = suite("error handling")(
     testM("creation OK, acquire OK, release barfs") {

@@ -32,11 +32,13 @@ object ExceptionsInZio extends zio.App {
     //    val app: ZIO[Any, Throwable, String] = ZIO { throw new Exception("boom") } // exception caught and polite message printed
     //    val x = app.catchAll(e => UIO { e.printStackTrace() })
 
-    val x = app.sandbox.either.map {
-      case Left(oops) => s"Oops: $oops"
-      case Right(result) => result
-    }
+    val x: ZIO[Any, Nothing, String] = handlePathogen(app)
 
     x.flatMap { msg => printAndReturn(s"finished politely w/: $msg") }.map(_ => 0)
+  }
+
+  def handlePathogen(app: ZIO[Any, Throwable, String]): ZIO[Any, Nothing, String] = app.sandbox.either.map {
+    case Left(oops) => s"Oops: $oops"
+    case Right(result) => result
   }
 }

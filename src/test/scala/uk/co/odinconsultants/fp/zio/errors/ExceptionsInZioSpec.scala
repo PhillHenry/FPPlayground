@@ -19,6 +19,11 @@ object ExceptionsInZioSpec extends DefaultRunnableSpec {
       val either: URIO[Any, Mitigated] = failRelease.sandbox.either // this fails
 
       assertM(either.left.map(_.defects.head))(equalTo(closeException))
+    },
+    testM("handle pathogen") {
+      val handled = handlePathogen(failRelease)
+
+      assertM(handled)(equalTo(closeMessage))
     }
   )
 }

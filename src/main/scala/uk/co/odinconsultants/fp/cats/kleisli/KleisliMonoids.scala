@@ -1,6 +1,6 @@
 package uk.co.odinconsultants.fp.cats.kleisli
 
-import cats.data.{Kleisli, OptionT}
+import cats.data.Kleisli
 import cats.implicits._
 
 object KleisliMonoids {

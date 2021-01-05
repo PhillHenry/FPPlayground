@@ -1,5 +1,5 @@
 package uk.co.odinconsultants.fp.zio.errors
-import zio.{Task, UIO, URIO, ZIO}
+import zio.{Cause, Task, UIO, URIO, ZIO}
 
 object ExceptionsInZio extends zio.App {
 
@@ -20,15 +20,27 @@ object ExceptionsInZio extends zio.App {
 
   val closeZIO: AutoCloseable => URIO[Any, Any] = x => URIO { x.close() }
 
-  val failRelease: ZIO[Any, Throwable, String] = ZIO {
+  class DomainException extends Exception
+
+  val resourceTask: Task[PathologicalResource] = ZIO {
+    pathologicalResource()
+  }
+
+  private def pathologicalResource(): PathologicalResource = {
     println("resource creation")
     new PathologicalResource
-  }.bracket(closeZIO) { _ =>
+  }
+
+  val domainUIO: UIO[PathologicalResource] = UIO {
+    pathologicalResource()
+  }
+
+  val failRelease: ZIO[Any, Nothing, String] = domainUIO.bracket(closeZIO) { _ =>
     printAndReturn(acquireMessage)
   }
 
   override def run(args: List[String]) = {
-    val app: ZIO[Any, Throwable, String] = failRelease // blows up with "Fiber failed." and the final message is not printed
+    val app: ZIO[Any, DomainX, String] = failRelease // blows up with "Fiber failed." if not handled and the final message is not printed
     //    val app: ZIO[Any, Throwable, String] = ZIO { throw new Exception("boom") } // exception caught and polite message printed
     //    val x = app.catchAll(e => UIO { e.printStackTrace() })
 
@@ -37,8 +49,13 @@ object ExceptionsInZio extends zio.App {
     x.flatMap { msg => printAndReturn(s"finished politely w/: $msg") }.map(_ => 0)
   }
 
-  def handlePathogen(app: ZIO[Any, Throwable, String]): ZIO[Any, Nothing, String] = app.sandbox.either.map {
-    case Left(oops) => s"Oops: $oops"
-    case Right(result) => result
+  type DomainX = DomainException
+
+  def handlePathogen(app: ZIO[Any, DomainX, String]): ZIO[Any, Nothing, String] = {
+    val sandboxed: ZIO[Any, Cause[DomainX], String] = app.sandbox
+    sandboxed.either.map {
+      case Left(oops)     => s"Oops: $oops"
+      case Right(result)  => result
+    }
   }
 }

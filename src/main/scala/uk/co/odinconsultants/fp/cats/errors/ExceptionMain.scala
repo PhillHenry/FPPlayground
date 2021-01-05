@@ -23,7 +23,8 @@ def foo[F[_]: Applicative: Defer](): F[Unit] =
   Defer[F].defer(Applicative[F].pure(throw Exception("boom")))
 IO will catch that, Eval won't, and both are valid instantiations for F
 so Sync is definitely what you want here :-)
-basically, there are a lot of subtle cases surrounding effect capture, and Sync/Async are properly constrained such that implementations are not allowed to behave poorly in those cases
+basically, there are a lot of subtle cases surrounding effect capture, and Sync/Async are properly constrained such
+that implementations are not allowed to behave poorly in those cases
 Defer is just… stack safety
 Fabio Labella @SystemFw Oct 12 16:21
 much better answer :)
@@ -42,4 +43,5 @@ object ExceptionMain extends IOApp {
   def foo[F[_]: Applicative: Defer](): F[Unit] =
     Defer[F].defer(Applicative[F].pure(throw new Exception("boom")))
 
+  def bar(): IO[Unit] = IO { throw new Exception("boom") }
 }

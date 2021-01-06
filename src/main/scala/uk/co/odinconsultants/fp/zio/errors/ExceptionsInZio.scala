@@ -40,7 +40,7 @@ object ExceptionsInZio extends zio.App {
   }
 
   override def run(args: List[String]) = {
-    val app: ZIO[Any, DomainX, String] = failRelease // blows up with "Fiber failed." if not handled and the final message is not printed
+    val app: ZIO[Any, Nothing, String] = failRelease // blows up with "Fiber failed." if not handled and the final message is not printed
     //    val app: ZIO[Any, Throwable, String] = ZIO { throw new Exception("boom") } // exception caught and polite message printed
     //    val x = app.catchAll(e => UIO { e.printStackTrace() })
 
@@ -51,7 +51,7 @@ object ExceptionsInZio extends zio.App {
 
   type DomainX = DomainException
 
-  def handlePathogen(app: ZIO[Any, DomainX, String]): ZIO[Any, Nothing, String] = {
+  def handlePathogen(app: ZIO[Any, Nothing, String]): ZIO[Any, Nothing, String] = {
     val sandboxed: ZIO[Any, Cause[DomainX], String] = app.sandbox
     sandboxed.either.map {
       case Left(oops)     => s"Oops: $oops"

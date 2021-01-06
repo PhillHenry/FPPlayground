@@ -45,7 +45,9 @@ object ErrorChannelSpec extends DefaultRunnableSpec {
 //      } @@ ignored // "Fiber failed. An unchecked error was produced."
 //      ,
       testM("orDie") {
-        // Error:(48, 28) This error handling operation assumes your effect can fail. However, your effect has Nothing for the error type, which means it cannot fail, so there is no need to handle the failure. To find out which method you can use instead of this operation, please see the reference chart at: https://zio.dev/docs/canfail
+        // Error:(48, 28) This error handling operation assumes your effect can fail. However, your effect has
+        // Nothing for the error type, which means it cannot fail, so there is no need to handle the failure.
+        // To find out which method you can use instead of this operation, please see the reference chart at: https://zio.dev/docs/canfail
         //        assertM(badBoy.run.orDie)(equalTo(e))
 //        assertM(badBoy.run.orDie)(equalTo(e))
 

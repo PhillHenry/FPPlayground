@@ -21,8 +21,13 @@ object KleisliOptionTIO extends IOApp {
   }))
 
   def ioPrint(x: Int): Http4sIOOption = IO {
-    println(x)
+    println(s"ioPrint = $x")
     someResult(x)
+  }
+
+  val ioNone: Http4sIOOption = IO {
+    println("none")
+    None
   }
 
   def printIO(x: String): IO[Unit] = IO { println(x) }
@@ -31,13 +36,19 @@ object KleisliOptionTIO extends IOApp {
 
   val optionTIOInt1: Http4sIOOptionT = OptionT(ioPrint(1))
   val optionTIOInt2: Http4sIOOptionT = OptionT(ioPrint(2))
+  val optionTIONone: Http4sIOOptionT = OptionT(ioNone)
 
   override def run(args: List[String]): IO[ExitCode] = {
     type Http4sKleisli = Kleisli[OptionT[IO, *], Request[IO], Response[IO]]
 
-    val x: Http4sKleisli = Kleisli(_ => optionTIOInt1)
-    val y: Http4sKleisli = Kleisli(_ => optionTIOInt2)
-    (y <+> x).run(Request(printIO("request"))).value.as(ExitCode.Success) // note that only the first Http4sKleisli is run
+    val kleisliPrint1:  Http4sKleisli = Kleisli(_ => optionTIOInt1)
+    val kleisliPrint2:  Http4sKleisli = Kleisli(_ => optionTIOInt2)
+    val kleisliNone:    Http4sKleisli = Kleisli(_ => optionTIONone)
+
+    val combined = kleisliPrint2 <+> kleisliPrint1
+
+    // note that only the first Http4sKleisli (corresponding to a Some(_)) is run
+    (kleisliNone <+> combined).run(Request(printIO("request"))).value.as(ExitCode.Success)
   }
 
 }

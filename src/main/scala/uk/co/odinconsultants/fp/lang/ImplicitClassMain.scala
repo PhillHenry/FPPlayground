@@ -13,10 +13,8 @@ object ImplicitClassMain {
   }
 
   def main(args: Array[String]): Unit = {
-    val myCaseClass     = MyCaseClass("My case class")
-//    val myImplicitClass = new MyImplicitClass(myCaseClass)
-    implicit val myInt: Int = 42
-    println(myCaseClass(42))
+    val GET     = MyCaseClass("My case class")
+    println(GET(42)) // makes it look as if we're constructing a GET but we're not. Just the magic of implict class indirection
   }
 
 }

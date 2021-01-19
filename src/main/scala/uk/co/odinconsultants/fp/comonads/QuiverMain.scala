@@ -37,7 +37,11 @@ object QuiverMain {
 
     def extract[A](g: GDecomp[V,A,E]): A = g.ctx.label
 
-    def coflatMap[A,B](g: GDecomp[V,A,E])(f: GDecomp[V,A,E] => B): GDecomp[V,B,E] = ???
+    def coflatMap[A,B](g: GDecomp[V,A,E])(f: GDecomp[V,A,E] => B): GDecomp[V,B,E] = GDecomp(g.ctx.copy(label = f(g)),
+      g.rest.decompAny.toGDecomp.map { x =>
+        val GDecomp(c, r) = coflatMap(x)(f)
+        c & r
+      } getOrElse empty)
 
     def map[A, B](fa: GDecomp[V, A, E])(f: A => B): GDecomp[V, B, E] = fa.map(f)
   }
@@ -51,33 +55,31 @@ object QuiverMain {
     val g:          Graph[V, A, B]  = mkGraph(nodes, edges)
     val decomposed: Decomp[V, A, B] = g.decompAny
 
-    def contextAsString(ctx: Option[Context[V, A, B]]): String = ctx match {
-      case None       => "no decomposition"
-      case Some(ctx)  =>
-        s"""in      = ${ctx.inAdj}
-           |out     = ${ctx.outAdj}
-           |label   = ${ctx.label}
-           |vertex  = ${ctx.vertex}""".stripMargin
+
+    println(s"maxDegree = ${maxDegreePlain(g)}")
+
+  }
+
+  def contextGraph[V,N,E](g: Graph[V,N,E]): Graph[V,Context[V,N,E],E] = ???
+
+  def maxDegree[V,N,E](g: Graph[V,N,E]): Int =
+    contextGraph(g).fold(0) { (c, z) =>
+      z max (c.label.ins.size + c.label.outs.size)
     }
 
-    val gDecomp: Option[GDecomp[V, A, B]] = decomposed.toGDecomp
-    val gDecompStr = gDecomp match {
-      case Some(x)  => s"${contextAsString(decomposed.ctx)}\n\nRest:\n${x.rest}"
-      case None     => "no toGDecomp"
-    }
+  def maxDegreePlain(g: Graph[V, A, B]) = g.fold(0) { (c, z) =>
+    g.decomp(c.vertex).toGDecomp.map {
+      case GDecomp(Context(ins, _, _, outs), _) =>
+        ins.size + outs.size
+    }.getOrElse(0) max z
+  }
 
-    val maxDegree = g.fold(0) { (c, z) =>
-      g.decomp(nodes.head.vertex).toGDecomp.map {
-        case GDecomp(Context(ins, _, _, outs), _) =>
-          ins.size + outs.size
-      }.getOrElse(0) max z
-    }
-    println(s"maxDegree = $maxDegree")
-
-//    println(s"toGDecomp:\n$gDecompStr")
-//    println()
-//    println(s"decompAny\nContext:\n${contextAsString(decomposed.ctx)}\n\nRest:\n${decomposed.rest}")
-//    val GDecomp(c, r) = main.cobind(_)(f)
-//    c & r
+  def contextAsString[V, A, B](ctx: Option[Context[V, A, B]]): String = ctx match {
+    case None       => "no decomposition"
+    case Some(ctx)  =>
+      s"""in      = ${ctx.inAdj}
+         |out     = ${ctx.outAdj}
+         |label   = ${ctx.label}
+         |vertex  = ${ctx.vertex}""".stripMargin
   }
 }

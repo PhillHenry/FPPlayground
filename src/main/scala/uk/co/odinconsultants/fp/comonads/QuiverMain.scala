@@ -1,5 +1,6 @@
 package uk.co.odinconsultants.fp.comonads
 
+import cats.Comonad
 import quiver.GDecomp
 import quiver.viz._
 import quiver._
@@ -31,6 +32,16 @@ object QuiverMain {
 
   case class A(x: String)
   case class B(x: String)
+
+  def gdecompComonad[V,E] = new Comonad[λ[α => GDecomp[V,α,E]]] {
+
+    def extract[A](g: GDecomp[V,A,E]): A = g.ctx.label
+
+    def coflatMap[A,B](g: GDecomp[V,A,E])(f: GDecomp[V,A,E] => B): GDecomp[V,B,E] = ???
+
+    def map[A, B](fa: GDecomp[V, A, E])(f: A => B): GDecomp[V, B, E] = fa.map(f)
+  }
+
 
   def main(args: Array[String]): Unit = {
 

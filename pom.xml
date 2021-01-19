@@ -27,7 +27,11 @@
   </properties>
 
   <dependencies>
-    <!-- https://mvnrepository.com/artifact/io.chrisdavenport/log4cats-core -->
+    <dependency>
+      <groupId>io.verizon.quiver</groupId>
+      <artifactId>core_2.12</artifactId>
+      <version>7.0.19</version>
+    </dependency>
     <dependency>
       <groupId>io.chrisdavenport</groupId>
       <artifactId>log4cats-core_${scala.compat.version}</artifactId>

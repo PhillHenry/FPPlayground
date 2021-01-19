@@ -37,20 +37,35 @@ object QuiverMain {
     val nodes: Seq[LNode[V, A]] = makeNodes(5)
     val edges: Seq[LEdge[V, B]] = chain(nodes)
 
-    val g: Graph[V, A, B] = mkGraph(nodes, edges)
+    val g:          Graph[V, A, B]  = mkGraph(nodes, edges)
     val decomposed: Decomp[V, A, B] = g.decompAny
 
-    def contextAsString(decomposed: Decomp[V, A, B]): String = decomposed.ctx match {
-      case None => "no decomposition"
-      case Some(ctx) =>
+    def contextAsString(ctx: Option[Context[V, A, B]]): String = ctx match {
+      case None       => "no decomposition"
+      case Some(ctx)  =>
         s"""in      = ${ctx.inAdj}
            |out     = ${ctx.outAdj}
            |label   = ${ctx.label}
            |vertex  = ${ctx.vertex}""".stripMargin
     }
 
+    val gDecomp: Option[GDecomp[V, A, B]] = decomposed.toGDecomp
+    val gDecompStr = gDecomp match {
+      case Some(x)  => s"${contextAsString(decomposed.ctx)}\n\nRest:\n${x.rest}"
+      case None     => "no toGDecomp"
+    }
 
-    println(s"decomposed\nContext:\n${contextAsString(decomposed)}\n\nRest:\n${decomposed.rest}")
+    val maxDegree = g.fold(0) { (c, z) =>
+      g.decomp(nodes.head.vertex).toGDecomp.map {
+        case GDecomp(Context(ins, _, _, outs), _) =>
+          ins.size + outs.size
+      }.getOrElse(0) max z
+    }
+    println(s"maxDegree = $maxDegree")
+
+//    println(s"toGDecomp:\n$gDecompStr")
+//    println()
+//    println(s"decompAny\nContext:\n${contextAsString(decomposed.ctx)}\n\nRest:\n${decomposed.rest}")
 //    val GDecomp(c, r) = main.cobind(_)(f)
 //    c & r
   }

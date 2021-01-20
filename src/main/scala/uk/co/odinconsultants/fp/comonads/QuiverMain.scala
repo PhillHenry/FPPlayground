@@ -25,11 +25,25 @@ object QuiverMain {
 
     def extract[A](g: GDecomp[V,A,E]): A = g.ctx.label
 
-    def coflatMap[A,B](g: GDecomp[V,A,E])(f: GDecomp[V,A,E] => B): GDecomp[V,B,E] = GDecomp(g.ctx.copy(label = f(g)),
+    /**
+     * Note that each successive node is treated as part of a graph that *does not have the proceeding node*
+     */
+    def coflatMap_[A,B](g: GDecomp[V,A,E])(f: GDecomp[V,A,E] => B): GDecomp[V,B,E] = GDecomp(g.ctx.copy(label = f(g)),
       g.rest.decompAny.toGDecomp.map { x =>
         val GDecomp(c, r) = coflatMap(x)(f)
         c & r
       } getOrElse empty)
+
+    def coflatMap[A,B](g: GDecomp[V,A,E])(
+                       f: GDecomp[V,A,E] => B): GDecomp[V,B,E] = {
+      val orig = g.ctx & g.rest
+      GDecomp(g.ctx.copy(label = f(g)),
+        g.rest.fold(empty[V, B, E]) { (c, acc) =>
+          val gDecomp: GDecomp[V, A, E] = orig.decomp(c.vertex).toGDecomp.get
+          val newContext: Context[V, B, E] = c.copy(label = f(gDecomp))
+          newContext & acc
+        })
+    }
 
     def map[A, B](fa: GDecomp[V, A, E])(f: A => B): GDecomp[V, B, E] = fa.map(f)
   }

@@ -13,7 +13,7 @@ object QuiverMain {
 
   def makeNodes(n: Int): Seq[LNode[V, AA]] = (0 until n).map(i => LNode(s"v$i", AA(s"node label $i")))
 
-  def chain(ns: Seq[LNode[V, AA]]): Seq[LEdge[V, BB]] = ns.tail.map { n => LEdge(n.vertex, ns.head.vertex, BB("relationship")) }
+  def chain(ns: Seq[LNode[V, AA]]): Seq[LEdge[V, BB]] = ns.zipWithIndex.tail.map { case(n, i) => LEdge(n.vertex, ns.head.vertex, BB(s"relationship $i")) }
 
   type V = String
   type E = Int
@@ -40,31 +40,42 @@ object QuiverMain {
     val edges: Seq[LEdge[V, BB]] = chain(nodes)
     val g:     Graph[V, AA, BB]  = mkGraph(nodes, edges)
 
-    val subGraphs: Option[GDecomp[V, Context[V, AA, BB], BB]] = g.decompAny.toGDecomp.map { gDecomp =>
-      gdecompComonad.coflatMap(gDecomp)(_.ctx)
-    }
-    println(s"subGraphs of ${gDecompAsString(subGraphs.get)}")
+    examineSubGraph(nodes.head.vertex, g)
 
     println(s"maxDegree = ${maxDegreePlain(g)}")
+    println(s"maxDegree = ${maxDegree(g)}")
 
+  }
+
+  private def examineSubGraph[V, A, B](vertex: V, graph: Graph[V, A, B]) = {
+    val decomp: Decomp[V, A, B] = graph.decomp(vertex)
+    val maybeSubGraph: Option[GDecomp[V, Context[V, A, B], B]] = decomp.toGDecomp.map { gDecomp =>
+      gdecompComonad.coflatMap(gDecomp)(_.ctx)
+    }
+    val subGraph: GDecomp[V, Context[V, A, B], B] = maybeSubGraph.get
+    println(s"subGraphs of ${gDecompAsString(subGraph)}\n")
+    subGraph
   }
 
   def gDecompAsString[V, A, B](x: GDecomp[V, A, B]): String = {
     s"GDecomp\n${contextAsString(x.ctx)}\nRest:\n${x.rest}"
   }
 
-  def contextGraph[V,N,E](g: Graph[V,N,E]): Graph[V,Context[V,N,E],E] = ???
+  def contextGraph[V,N,E](g: Graph[V,N,E]): Graph[V,Context[V,N,E],E] = g.decompAny.toGDecomp.map { gDecomp =>
+    gdecompComonad.coflatMap(gDecomp)(_.ctx)
+  }.get.toGraph
 
   def maxDegree[V,N,E](g: Graph[V,N,E]): Int =
     contextGraph(g).fold(0) { (c, z) =>
       z max (c.label.ins.size + c.label.outs.size)
     }
 
-  def maxDegreePlain(g: Graph[V, AA, BB]) = g.fold(0) { (c, z) =>
-    g.decomp(c.vertex).toGDecomp.map {
-      case GDecomp(Context(ins, _, _, outs), _) =>
+  def maxDegreePlain(g: Graph[V, AA, BB]): Int = g.fold(0) { (context, acc) =>
+    g.decomp(context.vertex).toGDecomp.map {
+      case GDecomp(Context(ins, v, l, outs), _) =>
+        println(s"maxDegreePlain visiting $v of decomposed ${context.vertex}. ${ins.size} incoming, ${outs.size} outgoing")
         ins.size + outs.size
-    }.getOrElse(0) max z
+    }.getOrElse(0) max acc
   }
 
   def contextOptionAsString[V, A, B](ctx: Option[Context[V, A, B]]): String = ctx match {

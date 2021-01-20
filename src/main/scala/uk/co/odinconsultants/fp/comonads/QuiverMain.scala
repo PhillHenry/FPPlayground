@@ -28,18 +28,22 @@ object QuiverMain {
     /**
      * Note that each successive node is treated as part of a graph that *does not have the proceeding node*
      */
-    def coflatMap_[A,B](g: GDecomp[V,A,E])(f: GDecomp[V,A,E] => B): GDecomp[V,B,E] = GDecomp(g.ctx.copy(label = f(g)),
+    def coflatMap_[A,B](g: GDecomp[V,A,E])(
+                        f: GDecomp[V,A,E] => B): GDecomp[V,B,E] = GDecomp(g.ctx.copy(label = f(g)),
       g.rest.decompAny.toGDecomp.map { x =>
-        val GDecomp(c, r) = coflatMap(x)(f)
+        val GDecomp(c, r) = coflatMap_(x)(f)
         c & r
       } getOrElse empty)
 
+    /**
+     * Now, this implementation uses the same graph (`orig`) on each fold so successive nodes are *not* removed.
+     */
     def coflatMap[A,B](g: GDecomp[V,A,E])(
                        f: GDecomp[V,A,E] => B): GDecomp[V,B,E] = {
       val orig = g.ctx & g.rest
       GDecomp(g.ctx.copy(label = f(g)),
         g.rest.fold(empty[V, B, E]) { (c, acc) =>
-          val gDecomp: GDecomp[V, A, E] = orig.decomp(c.vertex).toGDecomp.get
+          val gDecomp:    GDecomp[V, A, E] = orig.decomp(c.vertex).toGDecomp.get
           val newContext: Context[V, B, E] = c.copy(label = f(gDecomp))
           newContext & acc
         })

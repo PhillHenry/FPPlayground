@@ -6,8 +6,9 @@ object GuaranteeMain extends IOApp {
   val aMessage = "Hello, world"
 
   val helloWorld: IO[String] = IO {
-    println(aMessage)
-    aMessage
+    val msg = "\noriginal message"
+    println(msg)
+    msg
   }
 
   val io       = helloWorld.guarantee(IO {

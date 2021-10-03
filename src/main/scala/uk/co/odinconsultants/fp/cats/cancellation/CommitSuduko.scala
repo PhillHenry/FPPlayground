@@ -14,14 +14,13 @@ object CommitSudoku2 extends IOApp {
 
   def processItem(int: Int)(implicit timer: Timer[IO]): IO[Unit] =
     IO { println(s"Processing ${int}") } >>
-      IO.sleep(20.seconds) >>
+      IO.sleep(1.seconds) >>
       IO { println(s"Done processing ${int}") }
 
-  override def run(args: List[String]) = {
+  override def run(args: List[String]) =
     safe(processItem).use { f =>
       def loop(a: Int): IO[Unit] = f(a) >> loop(a + 1)
 
       loop(0).as(ExitCode.Success)
     }
-  }
 }
